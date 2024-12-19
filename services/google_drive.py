@@ -3,16 +3,35 @@ from pydrive.drive import GoogleDrive
 import os
 import logging
 
-def upload_to_google_drive(folder_path):
-    """
-    Upload the processed images folder as-is to Google Drive, set permissions to 'Anyone with link' (Editor),
-    and return the shareable link.
-    """
+# Global drive instance
+_drive_instance = None
+
+def init_google_drive():
+    """Initialize Google Drive connection"""
     try:
-        print("Authenticating Google Drive...")
         gauth = GoogleAuth()
-        gauth.LocalWebserverAuth()  # Authenticate user via a web server
-        drive = GoogleDrive(gauth)
+        gauth.LocalWebserverAuth()  # This will open the browser automatically if needed
+        return GoogleDrive(gauth)
+    except Exception as e:
+        logging.error(f"Error initializing Google Drive: {e}")
+        raise
+
+def set_google_drive_instance(drive):
+    """Set the global drive instance"""
+    global _drive_instance
+    _drive_instance = drive
+
+def get_drive_instance():
+    """Get the global drive instance"""
+    return _drive_instance
+
+def upload_to_google_drive(folder_path):
+    """Upload the processed images folder to Google Drive"""
+    try:
+        print("Uploading to Google Drive...")
+        drive = get_drive_instance()
+        if not drive:
+            raise Exception("Google Drive not initialized")
 
         # Upload the folder
         folder_name = os.path.basename(folder_path)
@@ -22,19 +41,6 @@ def upload_to_google_drive(folder_path):
         })
         gdrive_folder.Upload()
         folder_id = gdrive_folder['id']
-
-        print(f"Folder '{folder_name}' uploaded to Google Drive. Setting permissions...")
-        
-        # Set permissions: Anyone with link can edit
-        gdrive_folder.InsertPermission({
-            'type': 'anyone',
-            'value': 'anyone',
-            'role': 'writer'
-        })
-
-        # Generate and return shareable link
-        share_link = f"https://drive.google.com/drive/folders/{folder_id}?usp=sharing"
-        print(f"Shareable Link: {share_link}")
 
         # Now upload all files in the folder
         for filename in os.listdir(folder_path):
@@ -48,7 +54,9 @@ def upload_to_google_drive(folder_path):
                 file_drive.Upload()
                 print(f"Uploaded file: {filename}")
 
+        # Generate and return shareable link
+        share_link = f"https://drive.google.com/drive/folders/{folder_id}?usp=sharing"
         return share_link
     except Exception as e:
-        logging.error(f"Error uploading folder to Google Drive: {e}")
-        return None 
+        logging.error(f"Error uploading to Google Drive: {e}")
+        return None

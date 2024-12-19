@@ -57,12 +57,7 @@ def connect_to_existing_edge():
     try:
         print("\n🌟 Browser Setup")
         print("================")
-        print("1. Make sure Edge is running with remote debugging (port 9222)")
-        print("2. Ensure you're logged into MidJourney")
-        print("3. Navigate to the MidJourney archive page")
-        print("\nPress Enter when you're ready to continue...")
-        input()
-
+        
         # First check if Edge is running with remote debugging
         if not is_port_in_use(DEBUG_PORT):
             system = platform.system().lower()
@@ -75,12 +70,7 @@ def connect_to_existing_edge():
             else:  # Windows
                 print('\n   start msedge --remote-debugging-port=9222')
             
-            print("\n3. In the Edge window that opens:")
-            print("   - Log in to your Discord account")
-            print("   - Navigate to MidJourney")
-            print("   - Ensure you're properly logged in")
-            
-            print("\n4. Once you've completed these steps, press Enter to continue...")
+            print("\n3. Press Enter once Edge is running...")
             input()
             
             # Verify Edge is now running
@@ -88,7 +78,7 @@ def connect_to_existing_edge():
                 print("\n❌ Edge still not detected with remote debugging.")
                 print("Please make sure you ran the command correctly and try again.")
                 sys.exit(1)
-            
+        
         print("✅ Found Edge running with remote debugging")
         
         # Set up Edge options to connect to existing instance
@@ -101,16 +91,7 @@ def connect_to_existing_edge():
         
         # Connect to existing Edge instance
         driver = webdriver.Edge(service=driver_service, options=options)
-        
         print("✅ Connected to existing Edge instance")
-        
-        # Final confirmation before proceeding
-        print("\n🔍 Please verify:")
-        print("1. You can see the browser window")
-        print("2. You're logged into MidJourney")
-        print("3. You're on the archive page")
-        print("\nPress Enter to begin processing, or Ctrl+C to exit...")
-        input()
         
         return driver
             

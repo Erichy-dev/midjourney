@@ -4,28 +4,23 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 import logging
 from config.settings import ORGANIZE_PAGE_URL
+import sys
 
 def ensure_on_organize_page(driver):
     """Ensures the browser is on the MidJourney organize page."""
     try:
         print("Navigating to the Organize page...")
         driver.get(ORGANIZE_PAGE_URL)
-        
-        # Always refresh and check for verification
-        driver.refresh()
         time.sleep(5)
         
         if is_verification_page(driver):
             print("\n⚠️ Verification page detected!")
-            print("\nPlease follow these steps:")
-            print("1. Open a new tab with this URL:", ORGANIZE_PAGE_URL)
-            print("2. Close this current tab")
-            print("3. Complete any verification if needed")
-            print("\nPress Enter when you're done and on the organize page...")
-            input()
-            
-            # After user confirmation, verify we're on the organize page
-            driver.get(ORGANIZE_PAGE_URL)
+            print("\nPlease:")
+            print("1. Close this script (Ctrl+C)")
+            print("2. Complete the verification in the browser")
+            print("3. Restart the script once verification is done")
+            print("\nExiting...")
+            sys.exit(1)  # Exit with error code to indicate verification needed
             
         WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.TAG_NAME, "textarea")))
         print("Successfully navigated to the Organize page.")
