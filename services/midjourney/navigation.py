@@ -8,23 +8,34 @@ from config.settings import ORGANIZE_PAGE_URL
 def ensure_on_organize_page(driver):
     """Ensures the browser is on the MidJourney organize page."""
     try:
-        if "archive" not in driver.current_url.lower():
-            print("Navigating to the Organize page...")
-            driver.get(ORGANIZE_PAGE_URL)
-            driver.refresh()
-            time.sleep(5)
-            WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.TAG_NAME, "textarea")))
+        print("Navigating to the Organize page...")
+        driver.get(ORGANIZE_PAGE_URL)
+        
+        # Always refresh and check for verification
+        driver.refresh()
+        time.sleep(5)
+        
+        if is_verification_page(driver):
+            print("\n⚠️ Verification page detected!")
+            # Store the current URL
+            current_url = driver.current_url
+            # Open new tab
+            driver.execute_script("window.open(arguments[0], '_blank');", current_url)
+            # Switch to the new tab
+            driver.switch_to.window(driver.window_handles[-1])
+            # Close the old tab
+            driver.switch_to.window(driver.window_handles[0])
+            driver.close()
+            # Switch back to our new tab
+            driver.switch_to.window(driver.window_handles[0])
             
-            # Final confirmation after refresh
-            print("\n🔍 Please verify:")
-            print("1. You can see the browser window")
-            print("2. You're logged into MidJourney")
-            print("3. You're on the archive page")
-            print("\nPress Enter to begin processing, or Ctrl+C to exit...")
+            print("\n✨ Opened a new tab.")
+            print("Please:")
+            print("1. Complete the verification if needed")
+            print("\nPress Enter when everything looks normal...")
             input()
             
-        if is_verification_page(driver):
-            input("Please complete the verification and press Enter to continue...")
+        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.TAG_NAME, "textarea")))
         print("Successfully navigated to the Organize page.")
 
     except Exception as e:

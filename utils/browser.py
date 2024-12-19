@@ -44,8 +44,7 @@ def launch_edge_debug():
     
     print("\n2. In the Edge window that opens:")
     print("   - Log in to your Discord account")
-    print("   - Navigate to MidJourney")
-    print("   - Ensure you're properly logged in")
+    print("   - Open MidJourney in Discord")
     print("   - Disable 'Ask where to save each file before downloading'")
     print("     (Edge Settings > Downloads > Turn off 'Ask where to save each file before downloading')")
     
