@@ -9,6 +9,7 @@ import platform
 import subprocess
 import socket
 from config.settings import EDGE_DRIVER_PATH, DEBUG_PORT
+import sys
 
 def is_port_in_use(port):
     """Check if the debug port is already in use (indicating Edge is running)"""
@@ -30,56 +31,67 @@ def wait_for_port(port, timeout=30):
 
 def launch_edge_debug():
     """Launch Edge in debug mode if not already running"""
-    if is_port_in_use(DEBUG_PORT):
-        print(f"Edge is already running on port {DEBUG_PORT}")
-        return True
-
-    print("Launching Edge in debugging mode...")
-    
     system = platform.system().lower()
-    print(f"Detected operating system: {system}")
     
-    edge_cmd = {
-        'linux': 'microsoft-edge',
-        'darwin': '/Applications/Microsoft\\ Edge.app/Contents/MacOS/Microsoft\\ Edge',
-        'windows': 'msedge'
-    }.get(system, 'microsoft-edge')
+    print("\nPlease complete the following steps:")
+    print("\n1. Start Edge with Remote Debugging:")
+    if system == 'darwin':  # macOS
+        print('   Open Terminal and run:')
+        print('   /Applications/Microsoft\\ Edge.app/Contents/MacOS/Microsoft\\ Edge --remote-debugging-port=9222')
+    else:  # Windows
+        print('   Open Command Prompt and run:')
+        print('   start msedge --remote-debugging-port=9222')
     
-    debug_cmd = f'--remote-debugging-port={DEBUG_PORT}'
-    profile_cmd = '--user-data-dir="EdgeProfile"'
+    print("\n2. In the Edge window that opens:")
+    print("   - Log in to your Discord account")
+    print("   - Navigate to MidJourney")
+    print("   - Ensure you're properly logged in")
+    print("   - Disable 'Ask where to save each file before downloading'")
+    print("     (Edge Settings > Downloads > Turn off 'Ask where to save each file before downloading')")
     
-    try:
-        if system == 'darwin':  # macOS specific
-            cmd = f'{edge_cmd} {debug_cmd} {profile_cmd}'
-            print(f"Executing command: {cmd}")
-            subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        elif system == 'windows':
-            os.system(f'start {edge_cmd} {debug_cmd} {profile_cmd} > NUL 2>&1')
-        else:
-            subprocess.Popen([edge_cmd, debug_cmd, profile_cmd], 
-                           stdout=subprocess.DEVNULL, 
-                           stderr=subprocess.DEVNULL)
-        
-        print("\nPlease complete the following steps:")
-        print("1. Set up your Edge browser (sync/account/theme)")
-        print("2. Log in to MidJourney")
-        print("3. Once you're ready, press Enter to continue...")
-        input()
-        
-        # Verify Edge is running
-        if not wait_for_port(DEBUG_PORT):
-            raise Exception("Edge is not running on the debug port after setup")
-        
-        print("✅ Edge setup completed successfully")
-        return True
-        
-    except Exception as e:
-        logging.error(f"Error launching Edge: {e}")
-        return False
+    print("\n3. Once you're ready, press Enter to continue...")
+    print("\nNote: Do not close the Edge window that was opened with remote debugging")
+    input()
 
 def connect_to_existing_edge():
     """Connect to an existing Edge instance"""
     try:
+        print("\n🌟 Browser Setup")
+        print("================")
+        print("1. Make sure Edge is running with remote debugging (port 9222)")
+        print("2. Ensure you're logged into MidJourney")
+        print("3. Navigate to the MidJourney archive page")
+        print("\nPress Enter when you're ready to continue...")
+        input()
+
+        # First check if Edge is running with remote debugging
+        if not is_port_in_use(DEBUG_PORT):
+            system = platform.system().lower()
+            print("\n❌ Edge is not running with remote debugging enabled!")
+            print("\nPlease follow these steps:")
+            print("\n1. Open a new Terminal/Command Prompt window")
+            print("2. Copy and run this command:")
+            if system == 'darwin':  # macOS
+                print('\n   /Applications/Microsoft\\ Edge.app/Contents/MacOS/Microsoft\\ Edge --remote-debugging-port=9222')
+            else:  # Windows
+                print('\n   start msedge --remote-debugging-port=9222')
+            
+            print("\n3. In the Edge window that opens:")
+            print("   - Log in to your Discord account")
+            print("   - Navigate to MidJourney")
+            print("   - Ensure you're properly logged in")
+            
+            print("\n4. Once you've completed these steps, press Enter to continue...")
+            input()
+            
+            # Verify Edge is now running
+            if not is_port_in_use(DEBUG_PORT):
+                print("\n❌ Edge still not detected with remote debugging.")
+                print("Please make sure you ran the command correctly and try again.")
+                sys.exit(1)
+            
+        print("✅ Found Edge running with remote debugging")
+        
         # Set up Edge options to connect to existing instance
         options = EdgeOptions()
         options.use_chromium = True
@@ -92,6 +104,15 @@ def connect_to_existing_edge():
         driver = webdriver.Edge(service=driver_service, options=options)
         
         print("✅ Connected to existing Edge instance")
+        
+        # Final confirmation before proceeding
+        print("\n🔍 Please verify:")
+        print("1. You can see the browser window")
+        print("2. You're logged into MidJourney")
+        print("3. You're on the archive page")
+        print("\nPress Enter to begin processing, or Ctrl+C to exit...")
+        input()
+        
         return driver
             
     except Exception as e:
