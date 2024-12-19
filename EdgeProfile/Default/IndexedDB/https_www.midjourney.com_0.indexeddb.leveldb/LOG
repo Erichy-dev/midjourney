@@ -1,0 +1,40 @@
+2024/12/19-12:52:26.177 8207 Creating DB /Users/mac/Documents/git/midjourney/EdgeProfile/Default/IndexedDB/https_www.midjourney.com_0.indexeddb.leveldb since it was missing.
+2024/12/19-12:52:26.219 8207 Reusing MANIFEST /Users/mac/Documents/git/midjourney/EdgeProfile/Default/IndexedDB/https_www.midjourney.com_0.indexeddb.leveldb/MANIFEST-000001
+2024/12/19-12:52:26.311 b103 Level-0 table #5: started
+2024/12/19-12:52:26.336 b103 Level-0 table #5: 5924 bytes OK
+2024/12/19-12:52:26.359 b103 Delete type=0 #3
+2024/12/19-12:52:26.359 8207 Manual compaction at level-0 from '\x00\x01\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x02\x00\x00\x00' @ 0 : 0; will stop at (end)
+2024/12/19-12:53:18.453 a303 Manual compaction at level-0 from '\x00\x05\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x06\x00\x00\x00' @ 0 : 0; will stop at (end)
+2024/12/19-12:53:19.932 a303 Level-0 table #7: started
+2024/12/19-12:53:19.946 a303 Level-0 table #7: 10154 bytes OK
+2024/12/19-12:53:19.968 a303 Delete type=0 #4
+2024/12/19-12:53:19.969 8207 Manual compaction at level-0 from '\x00\x06\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x07\x00\x00\x00' @ 0 : 0; will stop at (end)
+2024/12/19-12:53:25.723 8207 Level-0 table #9: started
+2024/12/19-12:53:25.733 8207 Level-0 table #9: 4050 bytes OK
+2024/12/19-12:53:25.754 8207 Delete type=0 #6
+2024/12/19-12:53:25.754 8207 Manual compaction at level-0 from '\x00\x07\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x08\x00\x00\x00' @ 0 : 0; will stop at '\x00\x07\x00\x00\x05' @ 766 : 1
+2024/12/19-12:53:25.755 8207 Compacting 1@0 + 1@1 files
+2024/12/19-12:53:25.765 8207 Generated table #10@0: 255 keys, 5559 bytes
+2024/12/19-12:53:25.766 8207 Compacted 1@0 + 1@1 files => 5559 bytes
+2024/12/19-12:53:25.785 8207 compacted to: files[ 0 1 1 0 0 0 0 ]
+2024/12/19-12:53:25.786 8207 Delete type=2 #9
+2024/12/19-12:53:25.786 8207 Manual compaction at level-0 from '\x00\x07\x00\x00\x05' @ 766 : 1 .. '\x00\x08\x00\x00\x00' @ 0 : 0; will stop at (end)
+2024/12/19-12:54:05.731 a503 Compacting 1@1 + 1@2 files
+2024/12/19-12:54:05.746 a503 Generated table #11@1: 187 keys, 5358 bytes
+2024/12/19-12:54:05.746 a503 Compacted 1@1 + 1@2 files => 5358 bytes
+2024/12/19-12:54:05.772 a503 compacted to: files[ 0 0 1 0 0 0 0 ]
+2024/12/19-12:54:05.773 a503 Delete type=2 #7
+2024/12/19-12:54:05.773 a503 Delete type=2 #10
+2024/12/19-12:54:05.773 a503 Delete type=2 #5
+2024/12/19-12:55:01.778 a303 Level-0 table #13: started
+2024/12/19-12:55:01.789 a303 Level-0 table #13: 3945 bytes OK
+2024/12/19-12:55:01.808 a303 Delete type=0 #8
+2024/12/19-12:55:01.809 8207 Manual compaction at level-0 from '\x00\x08\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x09\x00\x00\x00' @ 0 : 0; will stop at (end)
+2024/12/19-12:55:37.845 8207 Compacting 1@1 + 1@2 files
+2024/12/19-12:55:37.858 8207 Generated table #14@1: 189 keys, 5464 bytes
+2024/12/19-12:55:37.859 8207 Compacted 1@1 + 1@2 files => 5464 bytes
+2024/12/19-12:55:37.891 8207 compacted to: files[ 0 0 1 0 0 0 0 ]
+2024/12/19-12:55:37.891 8207 Level-0 table #16: started
+2024/12/19-12:55:37.902 8207 Level-0 table #16: 6500 bytes OK
+2024/12/19-12:55:37.919 8207 Delete type=0 #12
+2024/12/19-12:55:37.919 8207 Manual compaction at level-0 from '\x00\x09\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x0a\x00\x00\x00' @ 0 : 0; will stop at (end)

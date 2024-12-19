@@ -8,7 +8,13 @@ import logging
 import os
 import shutil
 import pathlib
-from config.settings import *
+from config.settings import (
+    ORGANIZE_PAGE_URL,
+    WAIT_TIME_BETWEEN_PROMPTS,
+    BASE_OUTPUT_FOLDER,
+    SEAMLESS_PATTERN_FOLDER,
+    DIGITAL_PAPER_FOLDER,
+)
 from utils.image_processor import process_images, sanitize_name
 
 def ensure_on_organize_page(driver):

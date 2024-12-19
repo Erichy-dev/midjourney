@@ -1,4 +1,5 @@
 import os
+import platform
 
 # Get Project Root Directory
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -11,8 +12,20 @@ DISCORD_LOGIN_EMAIL = "benchekroune.yassine7@gmail.com"
 DISCORD_LOGIN_PASSWORD = "Malzahar77."
 MIDJOURNEY_WEB_URL = "https://www.midjourney.com"
 
-# Chrome Driver Settings
-CHROME_DRIVER_PATH = os.path.join(os.path.expanduser("~"), "WebDriver", "chromedriver.exe")
+# Edge Driver Settings - Platform specific
+if platform.system().lower() == 'darwin':  # macOS
+    EDGE_DRIVER_PATH = "/Users/mac/Downloads/edgedriver_mac64/msedgedriver"
+else:  # Windows and others
+    EDGE_DRIVER_PATH = os.path.join(os.path.expanduser("~"), "WebDriver", "msedgedriver")
+
+# Verify driver exists and is executable
+if platform.system().lower() == 'darwin':
+    if not os.path.exists(EDGE_DRIVER_PATH):
+        raise FileNotFoundError(f"Edge driver not found at {EDGE_DRIVER_PATH}")
+    # Make the driver executable if it isn't already
+    if not os.access(EDGE_DRIVER_PATH, os.X_OK):
+        os.chmod(EDGE_DRIVER_PATH, 0o755)
+
 DEBUG_PORT = "9222"
 
 # Folder Paths

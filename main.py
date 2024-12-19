@@ -1,5 +1,5 @@
 from config.settings import INPUT_EXCEL_FILE, BACKUP_FOLDER
-from utils.browser import connect_to_existing_chrome
+from utils.browser import connect_to_existing_edge
 from utils.excel import read_prompts_from_excel
 from services.midjourney import process_product
 import logging
@@ -15,7 +15,7 @@ def process_all_products():
     # Ensure backup directory exists
     os.makedirs(BACKUP_FOLDER, exist_ok=True)
 
-    driver = connect_to_existing_chrome()
+    driver = connect_to_existing_edge()
     for idx, product_data in enumerate(data):
         try:
             process_product(driver, product_data, idx)
