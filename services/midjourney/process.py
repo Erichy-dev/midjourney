@@ -1,6 +1,7 @@
 import time
 import logging
 import os
+import shutil
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from config.settings import (
@@ -11,6 +12,7 @@ from config.settings import (
 from utils.image_processor import process_images, sanitize_name
 from .navigation import ensure_on_organize_page
 from .download import download_images
+from services.google_drive import upload_to_google_drive
 
 def wait_for_last_image_to_generate(driver):
     """Waits for images to generate."""
@@ -23,8 +25,6 @@ def send_prompts_to_midjourney(driver, data):
     """Sends prompts to MidJourney and processes the results."""
     try:
         ensure_on_organize_page(driver)
-        driver.refresh()
-        time.sleep(5)
 
         for entry in data:
             prompts = entry.get('Prompts', [])
@@ -62,6 +62,29 @@ def send_prompts_to_midjourney(driver, data):
             )
             process_images(raw_folder_path, processed_folder_path)
             print(f"Folder successfully processed: {processed_folder_path}")
+
+            # Upload to Google Drive
+            share_link = upload_to_google_drive(processed_folder_path)
+            if share_link:
+                print(f"✅ Uploaded to Google Drive: {share_link}")
+                
+                # Delete local folders only after successful upload
+                try:
+                    # Delete raw folder
+                    if os.path.exists(raw_folder_path):
+                        shutil.rmtree(raw_folder_path)
+                        print(f"✅ Deleted raw folder: {raw_folder_path}")
+                    
+                    # Delete processed folder
+                    if os.path.exists(processed_folder_path):
+                        shutil.rmtree(processed_folder_path)
+                        print(f"✅ Deleted processed folder: {processed_folder_path}")
+                except Exception as e:
+                    print(f"⚠️ Warning: Could not delete local folders: {e}")
+                    print("You may want to delete them manually later")
+            else:
+                print("⚠️ Failed to upload to Google Drive")
+                print("Keeping local folders for retry")
 
     except Exception as e:
         logging.error(f"Error during prompt submission: {e}")

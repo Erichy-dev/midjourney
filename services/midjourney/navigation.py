@@ -17,23 +17,15 @@ def ensure_on_organize_page(driver):
         
         if is_verification_page(driver):
             print("\n⚠️ Verification page detected!")
-            # Store the current URL
-            current_url = driver.current_url
-            # Open new tab
-            driver.execute_script("window.open(arguments[0], '_blank');", current_url)
-            # Switch to the new tab
-            driver.switch_to.window(driver.window_handles[-1])
-            # Close the old tab
-            driver.switch_to.window(driver.window_handles[0])
-            driver.close()
-            # Switch back to our new tab
-            driver.switch_to.window(driver.window_handles[0])
-            
-            print("\n✨ Opened a new tab.")
-            print("Please:")
-            print("1. Complete the verification if needed")
-            print("\nPress Enter when everything looks normal...")
+            print("\nPlease follow these steps:")
+            print("1. Open a new tab with this URL:", ORGANIZE_PAGE_URL)
+            print("2. Close this current tab")
+            print("3. Complete any verification if needed")
+            print("\nPress Enter when you're done and on the organize page...")
             input()
+            
+            # After user confirmation, verify we're on the organize page
+            driver.get(ORGANIZE_PAGE_URL)
             
         WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.TAG_NAME, "textarea")))
         print("Successfully navigated to the Organize page.")

@@ -9,7 +9,7 @@ import os
 import shutil
 import pathlib
 from config.settings import BASE_OUTPUT_FOLDER, DOWNLOADS_FOLDER
-from .navigation import is_verification_page
+from .navigation import ensure_on_organize_page
 
 def download_images(driver, raw_folder_name):
     """Downloads selected images from MidJourney."""
@@ -31,27 +31,7 @@ def download_images(driver, raw_folder_name):
                 time.sleep(45)
                 break
             except Exception:
-                driver.refresh()
-                time.sleep(5)
-                if is_verification_page(driver):
-                    print("\n⚠️ Verification page detected!")
-                    # Store the current URL
-                    current_url = driver.current_url
-                    # Open new tab
-                    driver.execute_script("window.open(arguments[0], '_blank');", current_url)
-                    # Switch to the new tab
-                    driver.switch_to.window(driver.window_handles[-1])
-                    # Close the old tab
-                    driver.switch_to.window(driver.window_handles[0])
-                    driver.close()
-                    # Switch back to our new tab
-                    driver.switch_to.window(driver.window_handles[0])
-                    
-                    print("\n✨ Opened a new tab.")
-                    print("Please:")
-                    print("1. Complete the verification if needed")
-                    print("\nPress Enter when everything looks normal...")
-                    input()
+                ensure_on_organize_page(driver)
                 images = driver.find_elements(By.CSS_SELECTOR, "img")[:4]
                 for image in images:
                     ActionChains(driver).key_down(Keys.SHIFT).click(image).key_up(Keys.SHIFT).perform()

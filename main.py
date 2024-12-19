@@ -16,6 +16,7 @@ def process_all_products():
     for idx, product_data in enumerate(data):
         try:
             process_product(driver, product_data, idx)
+            break
         except Exception as e:
             logging.error(f"⚠️ Process halted for product {idx+1}: {e}")
             
