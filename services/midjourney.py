@@ -14,6 +14,7 @@ from config.settings import (
     BASE_OUTPUT_FOLDER,
     SEAMLESS_PATTERN_FOLDER,
     DIGITAL_PAPER_FOLDER,
+    DOWNLOADS_FOLDER
 )
 from utils.image_processor import process_images, sanitize_name
 

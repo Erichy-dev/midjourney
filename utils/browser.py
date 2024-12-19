@@ -78,44 +78,22 @@ def launch_edge_debug():
         return False
 
 def connect_to_existing_edge():
-    """Connect to Edge instance or launch a new one"""
-    max_retries = 3
-    retry_count = 0
-    
-    while retry_count < max_retries:
-        try:
-            # Debug information
-            print(f"Looking for Edge driver at: {EDGE_DRIVER_PATH}")
-            print(f"Current working directory: {os.getcwd()}")
+    """Connect to an existing Edge instance"""
+    try:
+        # Set up Edge options to connect to existing instance
+        options = EdgeOptions()
+        options.use_chromium = True
+        options.add_experimental_option("debuggerAddress", f"localhost:{DEBUG_PORT}")
+        
+        # Create a new Edge service
+        driver_service = EdgeService(EDGE_DRIVER_PATH)
+        
+        # Connect to existing Edge instance
+        driver = webdriver.Edge(service=driver_service, options=options)
+        
+        print("✅ Connected to existing Edge instance")
+        return driver
             
-            # Verify Edge driver exists
-            if not os.path.exists(EDGE_DRIVER_PATH):
-                raise FileNotFoundError(
-                    f"Edge driver not found at {EDGE_DRIVER_PATH}. "
-                    "Please download it from: https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/"
-                )
-
-            options = EdgeOptions()
-            options.use_chromium = True
-            options.debugger_address = f"127.0.0.1:{DEBUG_PORT}"
-            driver_service = EdgeService(EDGE_DRIVER_PATH)
-            driver = webdriver.Edge(service=driver_service, options=options)
-            
-            # Test the connection
-            driver.current_url
-            return driver
-            
-        except WebDriverException as e:
-            retry_count += 1
-            if retry_count >= max_retries:
-                logging.error("Failed to connect to Edge after multiple attempts")
-                raise
-            
-            print("No Edge window detected or connection failed. Launching Edge in debugging mode...")
-            if not launch_edge_debug():
-                raise Exception("Failed to launch Edge browser")
-            time.sleep(5)
-            
-        except Exception as e:
-            logging.error(f"Unexpected error: {e}")
-            raise
+    except Exception as e:
+        logging.error(f"Unexpected error connecting to Edge: {e}")
+        raise

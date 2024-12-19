@@ -5,7 +5,7 @@ import platform
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Base Directory for all data
-DATA_ROOT = os.path.join(os.path.dirname(PROJECT_ROOT), "Digital Paper Store")
+DATA_ROOT = os.path.join(PROJECT_ROOT, "Digital Paper Store")
 
 # Selenium Settings
 DISCORD_LOGIN_EMAIL = "benchekroune.yassine7@gmail.com"
