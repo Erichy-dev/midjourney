@@ -1,6 +1,0 @@
-2024/12/19-12:52:06.197 23a37 Reusing MANIFEST /Users/mac/Documents/git/midjourney/EdgeProfile/Default/EdgeCoupons/coupons_data.db/MANIFEST-000001
-2024/12/19-12:52:06.232 23a37 Recovering log #3
-2024/12/19-12:52:06.232 23a37 Reusing old log /Users/mac/Documents/git/midjourney/EdgeProfile/Default/EdgeCoupons/coupons_data.db/000003.log 
-2024/12/19-12:52:25.881 8207 Level-0 table #5: started
-2024/12/19-12:52:25.900 8207 Level-0 table #5: 635255 bytes OK
-2024/12/19-12:52:25.922 8207 Delete type=0 #3

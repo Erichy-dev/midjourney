@@ -1,4 +1,0 @@
-{"logTime": "1219/095203", "correlationVector":"FjeoNjzDUkyTLfTgQtkX09.1","action":"SyncServerConnectionManagerRequest", "result":"SYNC_SERVER_OK", "context":{"environment":"Prod_NorthEurope_000h", "migrationStage":"NotStarted", "server":"GENERAL01000016"}}
-{"logTime": "1219/095203", "correlationVector":"FjeoNjzDUkyTLfTgQtkX09.2","action":"AAD.GetKeyResponse", "result":"Fail", "context":Keys=0.LastKeyStatus=Empty.State=None.Pending NewKey. Tags: }
-{"logTime": "1219/095205", "correlationVector":"QTuR92zRcOVJ/Y3uz2UT9c","action":"AAD.Mip.Pack:", "result":"Fail", "context":MIP_CLOUD_COMMERCIAL:Service disabled}
-{"logTime": "1219/095205", "correlationVector":"QTuR92zRcOVJ/Y3uz2UT9c.0","action":"AAD.AddCommitKey", "result":"Fail", "context":MIP service disabled. Tags: }
