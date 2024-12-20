@@ -65,20 +65,6 @@ def send_prompts_to_midjourney(driver, data):
             process_images(raw_folder_path, processed_folder_path)
             print(f"Folder successfully processed: {processed_folder_path}")
 
-            try:
-                # Delete raw folder
-                if os.path.exists(raw_folder_path):
-                    shutil.rmtree(raw_folder_path)
-                    print(f"✅ Deleted raw folder: {raw_folder_path}")
-                
-                # Delete processed folder
-                if os.path.exists(processed_folder_path):
-                    shutil.rmtree(processed_folder_path)
-                    print(f"✅ Deleted processed folder: {processed_folder_path}")
-            except Exception as e:
-                print(f"⚠️ Warning: Could not delete local folders: {e}")
-                print("You may want to delete them manually later")
-
     except Exception as e:
         logging.error(f"Error during prompt submission: {e}")
         raise
@@ -145,18 +131,6 @@ def process_product(driver, product_data, idx):
         if share_link:
             print(f"✅ Uploaded to Google Drive: {share_link}")
             
-            # Delete local folders only after successful upload
-            try:
-                if os.path.exists(raw_folder_path):
-                    shutil.rmtree(raw_folder_path)
-                    print(f"✅ Deleted raw folder: {raw_folder_path}")
-                
-                if os.path.exists(processed_folder_path):
-                    shutil.rmtree(processed_folder_path)
-                    print(f"✅ Deleted processed folder: {processed_folder_path}")
-            except Exception as e:
-                print(f"⚠️ Warning: Could not delete local folders: {e}")
-                print("You may want to delete them manually later")
         else:
             print("⚠️ Failed to upload to Google Drive")
             print("Keeping local folders for retry")

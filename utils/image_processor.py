@@ -50,11 +50,6 @@ def process_images(raw_folder_path, processed_folder_path):
                          if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
         print(f"\n✅ Processed {len(processed_files)}/{len(image_files)} images")
         
-        # Delete raw folder after successful processing
-        if len(processed_files) == len(image_files):
-            print(f"\n🗑️ Deleting raw folder: {raw_folder_path}")
-            shutil.rmtree(raw_folder_path)
-        
     except Exception as e:
         print(f"❌ Error processing folder: {e}")
         logging.error(f"Error processing folder: {e}")

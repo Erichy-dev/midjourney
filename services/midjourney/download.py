@@ -67,13 +67,9 @@ def download_images(driver, raw_folder_name):
         print(f"Extracting to: {extracted_folder_path}")
         shutil.unpack_archive(zip_file_path, extracted_folder_path)
         
-        # Cleanup
-        print(f"Deleting zip file: {zip_file_path}")
-        os.remove(zip_file_path)
-        print("✅ Zip file deleted successfully")
-
         return extracted_folder_path
 
     except Exception as e:
         logging.error(f"Error in download_images: {e}")
         raise 
+    
