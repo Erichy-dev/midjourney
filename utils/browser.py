@@ -40,7 +40,7 @@ def launch_edge_debug():
         print('   /Applications/Microsoft\\ Edge.app/Contents/MacOS/Microsoft\\ Edge --remote-debugging-port=9222')
     else:  # Windows
         print('   Open Command Prompt and run:')
-        print('   start msedge --remote-debugging-port=9222')
+        print('   start msedge --remote-debugging-port=9222 --user-data-dir="C:\\EdgeProfile"')
     
     print("\n2. In the Edge window that opens:")
     print("   - Log in to your Discord account")

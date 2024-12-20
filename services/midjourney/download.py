@@ -39,7 +39,19 @@ def download_images(driver, raw_folder_name):
         if not download_button:
             raise Exception("Failed to locate download button after multiple attempts")
 
-        print(f"Searching for zip files in: {DOWNLOADS_FOLDER}")
+        print(f"Searching for latest Midjourney zip file in: {DOWNLOADS_FOLDER}")
+        zip_files = [f for f in os.listdir(DOWNLOADS_FOLDER) 
+                    if f.startswith('midjourney') and f.endswith('.zip')]
+        
+        if not zip_files:
+            print("No Midjourney zip files found!")
+            return
+            
+        # Get the most recent zip file based on creation time
+        latest_zip = max(zip_files, 
+                        key=lambda x: os.path.getctime(os.path.join(DOWNLOADS_FOLDER, x)))
+        
+        print(f"Found latest zip file: {latest_zip}")
         
         # Wait a bit for the download to complete and file to be visible
         time.sleep(5)

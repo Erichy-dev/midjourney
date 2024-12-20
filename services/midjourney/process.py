@@ -94,6 +94,13 @@ def send_prompts_to_midjourney(driver, data):
 
 def update_excel_with_results(product_data, raw_folder_path, processed_folder_path, share_link):
     """Update the Excel file with processing results."""
+    print("Debug values:")
+    print(f"Product data: {product_data}")
+    print(f"Raw folder path: {raw_folder_path}")
+    print(f"Processed folder path: {processed_folder_path}")
+    print(f"Share link: {share_link}")
+    print("-" * 50)  # Separator line for better readability
+    
     try:
         print("\nUpdating Excel file with results...")
         workbook = openpyxl.load_workbook("template (4).xlsx")
