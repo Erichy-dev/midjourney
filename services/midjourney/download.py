@@ -47,41 +47,27 @@ def download_images(driver, raw_folder_name):
             print("No Midjourney zip files found!")
             return
             
-        # Get the most recent zip file based on creation time
-        latest_zip = max(zip_files, 
-                        key=lambda x: os.path.getctime(os.path.join(DOWNLOADS_FOLDER, x)))
-        
-        print(f"Found latest zip file: {latest_zip}")
-        
         # Wait a bit for the download to complete and file to be visible
         time.sleep(5)
         
-        # List all files in downloads directory
+        # Get the latest midjourney zip file
         downloads_path = pathlib.Path(DOWNLOADS_FOLDER)
-        all_files = list(downloads_path.glob("*.zip"))
+        all_files = list(downloads_path.glob("midjourney_session*.zip"))
         
-        print(f"Found {len(all_files)} zip files")
-        for file in all_files:
-            print(f"Found file: {file}")
-        
-        # Filter for midjourney files
-        midjourney_files = [p for p in all_files if "midjourney_session" in p.name]
-        print(f"Found {len(midjourney_files)} midjourney zip files")
-        
-        if not midjourney_files:
+        if not all_files:
             raise Exception(f"No midjourney zip files found in {DOWNLOADS_FOLDER}")
             
-        zip_file_path = max(midjourney_files, key=os.path.getctime)
-        print(f"Selected zip file: {zip_file_path}")
+        zip_file_path = max(all_files, key=os.path.getctime)
+        print(f"Found latest zip file: {zip_file_path}")
         
+        # Create and extract to destination folder
         extracted_folder_path = os.path.join(BASE_OUTPUT_FOLDER, raw_folder_name)
-        if not os.path.exists(extracted_folder_path):
-            os.makedirs(extracted_folder_path)
+        os.makedirs(extracted_folder_path, exist_ok=True)
         
         print(f"Extracting to: {extracted_folder_path}")
         shutil.unpack_archive(zip_file_path, extracted_folder_path)
         
-        # Delete the zip file and confirm
+        # Cleanup
         print(f"Deleting zip file: {zip_file_path}")
         os.remove(zip_file_path)
         print("✅ Zip file deleted successfully")
