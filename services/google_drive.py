@@ -2,6 +2,7 @@ from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 import os
 import logging
+from config.settings import PROJECT_ROOT
 
 # Global drive instance
 _drive_instance = None
@@ -10,6 +11,8 @@ def init_google_drive():
     """Initialize Google Drive connection"""
     try:
         gauth = GoogleAuth()
+        # Set path to client_secrets.json using PROJECT_ROOT
+        gauth.settings['client_config_file'] = os.path.join(PROJECT_ROOT, 'config', 'client_secrets.json')
         gauth.LocalWebserverAuth()  # This will open the browser automatically if needed
         return GoogleDrive(gauth)
     except Exception as e:
