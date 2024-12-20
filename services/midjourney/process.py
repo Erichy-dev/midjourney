@@ -65,28 +65,19 @@ def send_prompts_to_midjourney(driver, data):
             process_images(raw_folder_path, processed_folder_path)
             print(f"Folder successfully processed: {processed_folder_path}")
 
-            # Upload to Google Drive
-            share_link = upload_to_google_drive(processed_folder_path)
-            if share_link:
-                print(f"✅ Uploaded to Google Drive: {share_link}")
+            try:
+                # Delete raw folder
+                if os.path.exists(raw_folder_path):
+                    shutil.rmtree(raw_folder_path)
+                    print(f"✅ Deleted raw folder: {raw_folder_path}")
                 
-                # Delete local folders only after successful upload
-                try:
-                    # Delete raw folder
-                    if os.path.exists(raw_folder_path):
-                        shutil.rmtree(raw_folder_path)
-                        print(f"✅ Deleted raw folder: {raw_folder_path}")
-                    
-                    # Delete processed folder
-                    if os.path.exists(processed_folder_path):
-                        shutil.rmtree(processed_folder_path)
-                        print(f"✅ Deleted processed folder: {processed_folder_path}")
-                except Exception as e:
-                    print(f"⚠️ Warning: Could not delete local folders: {e}")
-                    print("You may want to delete them manually later")
-            else:
-                print("⚠️ Failed to upload to Google Drive")
-                print("Keeping local folders for retry")
+                # Delete processed folder
+                if os.path.exists(processed_folder_path):
+                    shutil.rmtree(processed_folder_path)
+                    print(f"✅ Deleted processed folder: {processed_folder_path}")
+            except Exception as e:
+                print(f"⚠️ Warning: Could not delete local folders: {e}")
+                print("You may want to delete them manually later")
 
     except Exception as e:
         logging.error(f"Error during prompt submission: {e}")
@@ -94,13 +85,6 @@ def send_prompts_to_midjourney(driver, data):
 
 def update_excel_with_results(product_data, raw_folder_path, processed_folder_path, share_link):
     """Update the Excel file with processing results."""
-    print("Debug values:")
-    print(f"Product data: {product_data}")
-    print(f"Raw folder path: {raw_folder_path}")
-    print(f"Processed folder path: {processed_folder_path}")
-    print(f"Share link: {share_link}")
-    print("-" * 50)  # Separator line for better readability
-    
     try:
         print("\nUpdating Excel file with results...")
         workbook = openpyxl.load_workbook("template (4).xlsx")
