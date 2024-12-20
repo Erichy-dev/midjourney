@@ -96,65 +96,42 @@ def update_excel_with_results(product_data, raw_folder_path, processed_folder_pa
     """Update the Excel file with processing results."""
     try:
         print("\nUpdating Excel file with results...")
-        workbook = openpyxl.load_workbook(INPUT_EXCEL_FILE)
+        workbook = openpyxl.load_workbook("template (4).xlsx")
         sheet = workbook.active
         
         # Find the row for this product
         product_name = product_data.get('Product Name', '')
-        product_row = None
+        target_row = None
         
-        for row in range(2, sheet.max_row + 1):  # Start from row 2 to skip header
-            if sheet.cell(row=row, column=1).value == product_name:  # Assuming Product Name is in column A
-                product_row = row
+        # Find the row with the matching product name
+        for row in range(2, sheet.max_row + 1):
+            if sheet.cell(row=row, column=1).value == product_name:
+                target_row = row
                 break
         
-        if product_row:
-            # Update the cells with new information
-            updates = {
-                'Product Type': product_data.get('Product Type', ''),
-                'Category': product_data.get('Category', ''),
-                'Theme': product_data.get('Theme', ''),
-                'Prompts': product_data.get('Prompts', ''),
-                'Raw Folder Path': raw_folder_path,
-                'Processed Folder Path': processed_folder_path,
-                'Google Drive Link': share_link,
-                'Listing Images Folder': os.path.join(processed_folder_path, 'listing_images') if processed_folder_path else '',
-                'Downloadable File Path': os.path.join(processed_folder_path, 'download') if processed_folder_path else '',
-                'Title': product_data.get('Title', ''),
-                'Hook': product_data.get('Hook', ''),
-                'Premade Description': product_data.get('Premade Description', ''),
-                'Full Description': product_data.get('Full Description', '')
-            }
-            
-            # Column mappings (adjust these based on your Excel structure)
-            column_mappings = {
-                'Product Type': 'B',
-                'Category': 'C',
-                'Theme': 'D',
-                'Prompts': 'E',
-                'Raw Folder Path': 'F',
-                'Processed Folder Path': 'G',
-                'Google Drive Link': 'H',
-                'Listing Images Folder': 'I',
-                'Downloadable File Path': 'J',
-                'Title': 'K',
-                'Hook': 'L',
-                'Premade Description': 'M',
-                'Full Description': 'N'
-            }
-            
-            # Update each cell
-            for field, value in updates.items():
-                if field in column_mappings:
-                    column = column_mappings[field]
-                    sheet[f'{column}{product_row}'] = value
-            
-            # Save the workbook
-            workbook.save(INPUT_EXCEL_FILE)
-            print("✅ Excel file updated successfully")
-            
-        else:
-            print(f"⚠️ Could not find row for product: {product_name}")
+        # If row doesn't exist, create a new one
+        if not target_row:
+            target_row = sheet.max_row + 1
+            print(f"Creating new row at position {target_row}")
+        
+        # Update the row
+        sheet[f'A{target_row}'] = product_data.get('Product Name', '')
+        sheet[f'B{target_row}'] = product_data.get('Product Type', '')
+        sheet[f'C{target_row}'] = product_data.get('Category', '')
+        sheet[f'D{target_row}'] = product_data.get('Theme', '')
+        sheet[f'E{target_row}'] = str(product_data.get('Prompts', ''))
+        sheet[f'F{target_row}'] = raw_folder_path
+        sheet[f'G{target_row}'] = processed_folder_path
+        sheet[f'H{target_row}'] = share_link
+        sheet[f'I{target_row}'] = os.path.join(processed_folder_path, 'listing_images') if processed_folder_path else ''
+        sheet[f'J{target_row}'] = os.path.join(processed_folder_path, 'download') if processed_folder_path else ''
+        sheet[f'K{target_row}'] = product_data.get('Title', '')
+        sheet[f'L{target_row}'] = product_data.get('Hook', '')
+        sheet[f'M{target_row}'] = product_data.get('Premade Description', '')
+        sheet[f'N{target_row}'] = product_data.get('Full Description', '')
+        
+        workbook.save("template (4).xlsx")
+        print("✅ Excel file updated successfully")
             
     except Exception as e:
         print(f"⚠️ Error updating Excel file: {e}")
@@ -163,12 +140,40 @@ def update_excel_with_results(product_data, raw_folder_path, processed_folder_pa
 def process_product(driver, product_data, idx):
     """Processes a single product through the MidJourney workflow."""
     try:
-        product_name = f"product {idx+1}"
-        print(f"🚀 Starting processing for: {product_name}")
+        print(f"🚀 Starting processing for: {product_data.get('Product Name', '')}")
+
+        raw_folder_path = None
+        processed_folder_path = None
+        share_link = None
 
         send_prompts_to_midjourney(driver, [product_data])
 
-        print(f"✅ Product {product_name} processed successfully!")
+        # After processing is complete
+        share_link = upload_to_google_drive(processed_folder_path)
+        
+        if share_link:
+            print(f"✅ Uploaded to Google Drive: {share_link}")
+            
+            # Delete local folders only after successful upload
+            try:
+                if os.path.exists(raw_folder_path):
+                    shutil.rmtree(raw_folder_path)
+                    print(f"✅ Deleted raw folder: {raw_folder_path}")
+                
+                if os.path.exists(processed_folder_path):
+                    shutil.rmtree(processed_folder_path)
+                    print(f"✅ Deleted processed folder: {processed_folder_path}")
+            except Exception as e:
+                print(f"⚠️ Warning: Could not delete local folders: {e}")
+                print("You may want to delete them manually later")
+        else:
+            print("⚠️ Failed to upload to Google Drive")
+            print("Keeping local folders for retry")
+
+        print(f"✅ Product processed successfully!")
+        # Return both the paths and the updated product_data
+        return product_data, raw_folder_path, processed_folder_path, share_link
+        
     except Exception as e:
-        logging.error(f"Error processing product {product_name}: {e}")
+        logging.error(f"Error processing product: {e}")
         raise 
