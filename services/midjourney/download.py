@@ -38,7 +38,7 @@ def download_with_retry(url, max_retries=5):
                 print(f"❌ All download attempts failed for URL: {url}")
                 return False
 
-def download_images(driver, raw_folder_name):
+def download_images(driver, raw_folder_name, expected_count=None):
     """Downloads selected images from MidJourney."""
     print("Selecting and downloading images...")
     try:
@@ -47,7 +47,13 @@ def download_images(driver, raw_folder_name):
         
         # Get all available images
         images = driver.select_all("img")
-        total_images = len(images)  # This will be number_of_prompts * 4
+        
+        # Take only the expected number of most recent images
+        if expected_count:
+            images = images[:expected_count]  # Most recent images appear first
+            total_images = expected_count
+        else:
+            total_images = len(images)
         
         if total_images == 0:
             raise Exception("No images found to download")

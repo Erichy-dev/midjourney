@@ -156,7 +156,8 @@ def process_product(driver, product_data, idx):
             wait_for_last_image_to_generate(driver)
             
             # Download all images at once
-            raw_folder_path = download_images(driver, sanitized_product_name)
+            expected_images = len(prompts) * 4  # 4 images per prompt
+            raw_folder_path = download_images(driver, sanitized_product_name, expected_count=expected_images)
             
             # Process all images
             if os.path.exists(raw_folder_path):
