@@ -6,7 +6,7 @@ import pathlib
 import subprocess
 from config.settings import BASE_OUTPUT_FOLDER, DOWNLOADS_FOLDER
 
-def download_with_retry(url, max_retries=5):
+def download_with_retry(url, max_retries=10):
     """Download file using yt-dlp with retries"""
     # Change to the raw folder directory
     os.chdir(BASE_OUTPUT_FOLDER)
@@ -44,7 +44,6 @@ def download_images(driver, raw_folder_name):
             
             exit_button = driver.wait_for_element('button[title="Close"]')
             exit_button.click()
-            driver.google_get("https://www.midjourney.com/archive", bypass_cloudflare=True)
 
         return BASE_OUTPUT_FOLDER
 

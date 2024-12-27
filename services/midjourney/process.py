@@ -123,25 +123,30 @@ def process_product(driver, product_data, idx):
     try:
         print(f"🚀 Starting processing for: {product_data.get('Product Name', '')}")
 
+        # Determine the target folder based on product type
+        product_type = product_data.get('Product Type', '')
+        target_folder = SEAMLESS_PATTERN_FOLDER if product_type == "Seamless Pattern" else DIGITAL_PAPER_FOLDER
+
         raw_folder_path = None
-        processed_folder_path = None
         share_link = None
 
         send_prompts_to_midjourney(driver, [product_data])
+        
+        # Process images directly to target folder
+        process_images(raw_folder_path, target_folder)
 
         # After processing is complete
-        share_link = upload_to_google_drive(processed_folder_path)
+        share_link = upload_to_google_drive(target_folder)
         
         if share_link:
             print(f"✅ Uploaded to Google Drive: {share_link}")
-            
         else:
             print("⚠️ Failed to upload to Google Drive")
             print("Keeping local folders for retry")
 
         print(f"✅ Product processed successfully!")
         # Return both the paths and the updated product_data
-        return product_data, raw_folder_path, processed_folder_path, share_link
+        return product_data, raw_folder_path, target_folder, share_link
         
     except Exception as e:
         logging.error(f"Error processing product: {e}")

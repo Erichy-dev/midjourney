@@ -8,11 +8,11 @@ from config.settings import SEAMLESS_PATTERN_FOLDER, DIGITAL_PAPER_FOLDER
 def sanitize_name(name):
     return "".join(c for c in name if c.isalnum() or c in (" ", "-", "_")).strip()
 
-def process_images(raw_folder_path, processed_folder_path):
-    """Process all images in the raw folder and save to processed folder"""
+def process_images(raw_folder_path, target_folder):
+    """Process all images in the raw folder and save directly to target folder"""
     try:
-        # Ensure the processed folder exists
-        os.makedirs(processed_folder_path, exist_ok=True)
+        # Ensure the target folder exists
+        os.makedirs(target_folder, exist_ok=True)
         
         # Get list of image files
         image_files = [f for f in os.listdir(raw_folder_path) 
@@ -24,12 +24,12 @@ def process_images(raw_folder_path, processed_folder_path):
         
         print(f"\nProcessing {len(image_files)} images:")
         print(f"From: {raw_folder_path}")
-        print(f"To: {processed_folder_path}")
+        print(f"To: {target_folder}")
         
         for idx, filename in enumerate(image_files):
             try:
                 input_path = os.path.join(raw_folder_path, filename)
-                output_path = os.path.join(processed_folder_path, filename)
+                output_path = os.path.join(target_folder, filename)
                 
                 print(f"\nProcessing image {idx + 1}/{len(image_files)}: {filename}")
                 
@@ -46,7 +46,7 @@ def process_images(raw_folder_path, processed_folder_path):
                 continue
         
         # Verify processed files
-        processed_files = [f for f in os.listdir(processed_folder_path) 
+        processed_files = [f for f in os.listdir(target_folder) 
                          if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
         print(f"\n✅ Processed {len(processed_files)}/{len(image_files)} images")
         
