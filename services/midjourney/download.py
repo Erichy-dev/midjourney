@@ -3,50 +3,49 @@ import logging
 import os
 import shutil
 import pathlib
+import subprocess
 from config.settings import BASE_OUTPUT_FOLDER, DOWNLOADS_FOLDER
-from .navigation import ensure_on_organize_page
+
+def download_with_retry(url, max_retries=5):
+    """Download file using yt-dlp with retries"""
+    # Change to the raw folder directory
+    os.chdir(BASE_OUTPUT_FOLDER)
+    
+    for attempt in range(max_retries):
+        try:
+            # Use yt-dlp to download the file
+            command = [
+                'yt-dlp',
+                # '--no-warnings',
+                # '--quiet',
+                url
+            ]
+            subprocess.run(command, check=True)
+            return True
+        except subprocess.CalledProcessError as e:
+            if attempt < max_retries - 1:
+                print(f"Download attempt {attempt + 1} failed. Retrying...")
+                time.sleep(2)  # Wait 2 seconds before retry
+            else:
+                print(f"All download attempts failed for URL: {url}")
+                raise e
 
 def download_images(driver, raw_folder_name):
     """Downloads selected images from MidJourney."""
     print("Selecting and downloading images...")
     try:
         # Select images
-        i = 0
-        for i in range(4):
-            images = driver.select_all("img")[:4]
-            images[i].click()
-            time.sleep(3)
-            download_button = driver.wait_for_element('button[title="Download Image"]')
-            download_button.click()
-            time.sleep(3)
+        images = driver.select_all("img")[:4]
+        for image in images:
+            image.click()
+            img_element = driver.wait_for_element('img[style="filter: none;"]')
+            img_url = img_element.get_attribute("src")
+            download_with_retry(img_url)
+            
             exit_button = driver.wait_for_element('button[title="Close"]')
             exit_button.click()
             driver.google_get("https://www.midjourney.com/archive", bypass_cloudflare=True)
 
-        time.sleep(10)
-
-        print(f"Searching for latest downloaded images in: {DOWNLOADS_FOLDER}")
-        
-        # Wait a bit for downloads to complete
-        time.sleep(5)
-        
-        # Get all image files from downloads folder
-        downloads_path = pathlib.Path(DOWNLOADS_FOLDER)
-        image_files = list(downloads_path.glob("*.png"))  # Assuming PNG format, adjust if needed
-        
-        if not image_files:
-            raise Exception(f"No downloaded images found in {DOWNLOADS_FOLDER}")
-            
-        # Sort by creation time to get the 4 most recent images
-        latest_images = sorted(image_files, key=os.path.getctime, reverse=True)[:4]
-        print(f"Found {len(latest_images)} recent images")
-        
-        # Move images directly to BASE_OUTPUT_FOLDER (Raw Folders)
-        for img_path in latest_images:
-            dest_path = os.path.join(BASE_OUTPUT_FOLDER, img_path.name)
-            shutil.move(str(img_path), dest_path)
-            print(f"Moved: {img_path.name}")
-        
         return BASE_OUTPUT_FOLDER
 
     except Exception as e:

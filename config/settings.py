@@ -8,7 +8,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_ROOT = os.path.join(PROJECT_ROOT, "Digital Paper Store")
 
 # The 4 main directories
-RAW_FOLDER = os.path.join(DATA_ROOT, "Digital Paper Store - Raw Folders")
+RAW_FOLDER = os.path.join(DATA_ROOT, "Digital Paper Store - Raw Folder")
 SEAMLESS_PATTERN_FOLDER = os.path.join(DATA_ROOT, "Digital Paper Store - Seamless Pattern")
 DIGITAL_PAPER_FOLDER = os.path.join(DATA_ROOT, "Digital Paper Store - Digital Paper")
 BACKUP_FOLDER = os.path.join(DATA_ROOT, "Digital Paper Store - Excel Sheet - Backup")
@@ -42,7 +42,7 @@ if platform.system().lower() == 'darwin':
 DEBUG_PORT = "9222"
 
 # Folder Paths
-BASE_OUTPUT_FOLDER = os.path.join(DATA_ROOT, "Digital Paper Store - Raw Folders")
+BASE_OUTPUT_FOLDER = os.path.join(DATA_ROOT, "Digital Paper Store - Raw Folder")
 DOWNLOADS_FOLDER = os.path.expanduser("~/Downloads")
 
 # Excel Settings
