@@ -3,6 +3,7 @@ from pydrive.drive import GoogleDrive
 import os
 import logging
 from config.settings import PROJECT_ROOT, SEAMLESS_PATTERN_FOLDER, DIGITAL_PAPER_FOLDER
+import time
 
 # Global drive instance
 _drive_instance = None
@@ -28,44 +29,49 @@ def get_drive_instance():
     """Get the global drive instance"""
     return _drive_instance
 
-def upload_to_google_drive(target_folder):
+def upload_to_google_drive(target_folder, max_retries=3):
     """Upload the processed images folder to Google Drive maintaining folder structure"""
-    try:
-        print("Uploading to Google Drive...")
-        drive = get_drive_instance()
-        if not drive:
-            raise Exception("Google Drive not initialized")
+    for attempt in range(max_retries):
+        try:
+            print("Uploading to Google Drive...")
+            drive = get_drive_instance()
+            if not drive:
+                raise Exception("Google Drive not initialized")
 
-        # Determine if it's Seamless Pattern or Digital Paper from the path
-        folder_type = "Seamless Pattern" if SEAMLESS_PATTERN_FOLDER in target_folder else "Digital Paper"
-        
-        # Create main category folder (if it doesn't exist)
-        main_folder = create_or_get_folder(drive, f"Digital Paper Store - {folder_type}")
-        
-        # Get the product folder name from the target path
-        product_folder_name = os.path.basename(target_folder)
-        
-        # Create product subfolder
-        product_folder = create_or_get_folder(drive, product_folder_name, parent_id=main_folder['id'])
-        
-        # Upload all files in the folder
-        for filename in os.listdir(target_folder):
-            filepath = os.path.join(target_folder, filename)
-            if os.path.isfile(filepath):
-                file_drive = drive.CreateFile({
-                    'title': filename,
-                    'parents': [{'id': product_folder['id']}]
-                })
-                file_drive.SetContentFile(filepath)
-                file_drive.Upload()
-                print(f"Uploaded file: {filename}")
+            # Determine if it's Seamless Pattern or Digital Paper from the path
+            folder_type = "Seamless Pattern" if SEAMLESS_PATTERN_FOLDER in target_folder else "Digital Paper"
+            
+            # Create main category folder (if it doesn't exist)
+            main_folder = create_or_get_folder(drive, f"Digital Paper Store - {folder_type}")
+            
+            # Get the product folder name from the target path
+            product_folder_name = os.path.basename(target_folder)
+            
+            # Create product subfolder
+            product_folder = create_or_get_folder(drive, product_folder_name, parent_id=main_folder['id'])
+            
+            # Upload all files in the folder
+            for filename in os.listdir(target_folder):
+                filepath = os.path.join(target_folder, filename)
+                if os.path.isfile(filepath):
+                    file_drive = drive.CreateFile({
+                        'title': filename,
+                        'parents': [{'id': product_folder['id']}]
+                    })
+                    file_drive.SetContentFile(filepath)
+                    file_drive.Upload()
+                    print(f"Uploaded file: {filename}")
 
-        # Generate and return shareable link for the product folder
-        share_link = f"https://drive.google.com/drive/folders/{product_folder['id']}?usp=sharing"
-        return share_link
-    except Exception as e:
-        logging.error(f"Error uploading to Google Drive: {e}")
-        return None
+            # Generate and return shareable link for the product folder
+            share_link = f"https://drive.google.com/drive/folders/{product_folder['id']}?usp=sharing"
+            return share_link
+        except Exception as e:
+            if attempt < max_retries - 1:
+                print(f"Upload attempt {attempt + 1} failed, retrying...")
+                time.sleep(5)
+            else:
+                logging.error(f"All upload attempts failed: {e}")
+                return None
 
 def create_or_get_folder(drive, folder_name, parent_id=None):
     """Create a folder in Google Drive or get it if it already exists"""

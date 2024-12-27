@@ -1,11 +1,14 @@
 import openpyxl
 import logging
+import os
 
 def read_prompts_from_excel(file_path):
     """
     Read prompts, Product Type, Category, and Theme from the specified Excel file.
     """
     try:
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Excel file not found: {file_path}")
         workbook = openpyxl.load_workbook(file_path)
         sheet = workbook.active
         headers = [cell.value for cell in sheet[1]]

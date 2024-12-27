@@ -128,24 +128,42 @@ def process_product(driver, product_data, idx):
     try:
         print(f"🚀 Starting processing for: {product_data.get('Product Name', '')}")
 
+        # Create folders if they don't exist
+        os.makedirs(RAW_FOLDER, exist_ok=True)
+        os.makedirs(SEAMLESS_PATTERN_FOLDER, exist_ok=True)
+        os.makedirs(DIGITAL_PAPER_FOLDER, exist_ok=True)
+
         # Create product-specific folder names
         theme = product_data.get('Theme', '').strip()
         category = product_data.get('Category', '').strip()
         product_type = product_data.get('Product Type', '').strip()
         
-        # Create standardized folder names
         product_name = f"{theme} - {category} - {product_type}"
         sanitized_product_name = sanitize_name(product_name)
         
-        # Define folder paths
-        raw_folder_path = os.path.join(RAW_FOLDER, f"Raw {sanitized_product_name}")
+        # Define paths
+        raw_folder_path = RAW_FOLDER  # Changed to use main RAW_FOLDER
         target_folder = os.path.join(
             SEAMLESS_PATTERN_FOLDER if product_type == "Seamless Pattern" else DIGITAL_PAPER_FOLDER,
             sanitized_product_name
         )
 
+        # Create target folder
+        os.makedirs(target_folder, exist_ok=True)
+        print(f"📂 Created target folder: {target_folder}")
+
         # Send prompts and download images
         send_prompts_to_midjourney(driver, [product_data])
+        
+        # Verify images exist
+        if not os.path.exists(raw_folder_path):
+            raise FileNotFoundError(f"Raw folder not found: {raw_folder_path}")
+            
+        image_files = [f for f in os.listdir(raw_folder_path) if f.endswith(('.png', '.jpg', '.jpeg'))]
+        if not image_files:
+            raise FileNotFoundError(f"No images found in {raw_folder_path}")
+            
+        print(f"✅ Found {len(image_files)} images in raw folder")
         
         # Process images
         process_images(raw_folder_path, target_folder)
