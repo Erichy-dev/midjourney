@@ -50,21 +50,34 @@ def upload_to_google_drive(target_folder, max_retries=3):
             # Create product subfolder
             product_folder = create_or_get_folder(drive, product_folder_name, parent_id=main_folder['id'])
             
+            # Get list of local files to upload
+            local_files = [f for f in os.listdir(target_folder) if os.path.isfile(os.path.join(target_folder, f))]
+            uploaded_count = 0
+            
             # Upload all files in the folder
-            for filename in os.listdir(target_folder):
+            for filename in local_files:
                 filepath = os.path.join(target_folder, filename)
-                if os.path.isfile(filepath):
+                try:
                     file_drive = drive.CreateFile({
                         'title': filename,
                         'parents': [{'id': product_folder['id']}]
                     })
                     file_drive.SetContentFile(filepath)
                     file_drive.Upload()
-                    print(f"Uploaded file: {filename}")
+                    uploaded_count += 1
+                    print(f"✅ Uploaded file: {filename}")
+                except Exception as e:
+                    print(f"⚠️ Failed to upload {filename}: {e}")
+
+            # Verify upload count
+            if uploaded_count == 0:
+                raise Exception("No files were uploaded successfully")
+            print(f"✅ Successfully uploaded {uploaded_count}/{len(local_files)} files")
 
             # Generate and return shareable link for the product folder
             share_link = f"https://drive.google.com/drive/folders/{product_folder['id']}?usp=sharing"
             return share_link
+            
         except Exception as e:
             if attempt < max_retries - 1:
                 print(f"Upload attempt {attempt + 1} failed, retrying...")

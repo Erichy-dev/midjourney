@@ -113,7 +113,7 @@ def update_excel_with_results(product_data, raw_folder_path, target_folders, sha
         raise
 
 def process_product(driver, product_data, idx):
-    """Processes a single product through the MidJourney workflow."""
+    """Processes a single product with all its prompts at once."""
     try:
         print(f"🚀 Starting processing for: {product_data.get('Product Name', '')}")
         
@@ -123,13 +123,13 @@ def process_product(driver, product_data, idx):
         prompts = product_data.get('Prompts', [])
         
         if not isinstance(prompts, list):
-            prompts = [prompts]  # Convert single prompt to list
-            
+            prompts = [prompts]
+        
         # Create single product folder
         product_name = f"{theme} - {category} - {product_type}"
         sanitized_product_name = sanitize_name(product_name)
         
-        # Define paths once for the product
+        # Define paths
         raw_folder_path = RAW_FOLDER
         target_folder = os.path.join(
             SEAMLESS_PATTERN_FOLDER if product_type == "Seamless Pattern" else DIGITAL_PAPER_FOLDER,
@@ -138,39 +138,45 @@ def process_product(driver, product_data, idx):
         
         # Create folders
         os.makedirs(target_folder, exist_ok=True)
-        print(f"Found {len(prompts)} prompts to process for: {sanitized_product_name}")
+        print(f"Processing {len(prompts)} prompts for: {sanitized_product_name}")
         
-        all_results = []
-        for prompt_idx, prompt in enumerate(prompts, 1):
-            try:
-                print(f"\n🎯 Processing prompt {prompt_idx}/{len(prompts)}")
+        try:
+            # Submit all prompts at once
+            for prompt_idx, prompt in enumerate(prompts, 1):
+                print(f"\n📝 Submitting prompt {prompt_idx}/{len(prompts)}")
                 print(f"Prompt: {prompt}")
-                
-                # Send single prompt and wait for generation
-                send_prompts_to_midjourney(driver, [{**product_data, 'Prompts': [prompt]}])
-                
-                # Download and process images
-                if os.path.exists(raw_folder_path):
-                    process_images(raw_folder_path, target_folder)
-                    all_results.append((prompt, target_folder))
-                
-            except Exception as e:
-                logging.error(f"Error processing prompt {prompt_idx}: {e}")
-                print(f"⚠️ Error with prompt {prompt_idx}: {e}")
-                continue
-        
-        if not all_results:
-            raise Exception("No prompts were processed successfully")
-        
-        # Upload to Google Drive once after all prompts are processed
-        share_link = upload_to_google_drive(target_folder)
-        if share_link:
-            print(f"✅ Uploaded to Google Drive: {share_link}")
-        else:
-            print("⚠️ Failed to upload to Google Drive")
+                driver.type("textarea", prompt)
+                driver.run_js("document.activeElement.blur()")
+                driver.click("textarea + button")
+                time.sleep(WAIT_TIME_BETWEEN_PROMPTS)
             
-        # Return the combined results
-        return product_data, raw_folder_path, target_folder, share_link
+            # Wait for all images to generate
+            expected_images = len(prompts) * 4  # 4 images per prompt
+            print(f"\n⏳ Waiting for {expected_images} images to generate...")
+            wait_for_last_image_to_generate(driver)
+            
+            # Download all images at once
+            raw_folder_path = download_images(driver, sanitized_product_name)
+            
+            # Process all images
+            if os.path.exists(raw_folder_path):
+                expected_images = len(prompts) * 4  # 4 images per prompt
+                process_images(raw_folder_path, target_folder, expected_count=expected_images)
+                print(f"✅ Processed images for all prompts")
+            
+            # Upload to Google Drive
+            share_link = upload_to_google_drive(target_folder)
+            if share_link:
+                print(f"✅ Uploaded to Google Drive: {share_link}")
+            else:
+                print("⚠️ Failed to upload to Google Drive")
+            
+            return product_data, raw_folder_path, target_folder, share_link
+            
+        except Exception as e:
+            logging.error(f"Error processing prompts: {e}")
+            print(f"⚠️ Error processing prompts: {e}")
+            raise
         
     except Exception as e:
         logging.error(f"Error processing product: {e}")

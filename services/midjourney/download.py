@@ -42,48 +42,48 @@ def download_images(driver, raw_folder_name):
     """Downloads selected images from MidJourney."""
     print("Selecting and downloading images...")
     try:
-        # Ensure RAW_FOLDER exists
         os.makedirs(RAW_FOLDER, exist_ok=True)
-        
-        # Change to raw folder for downloads
         os.chdir(RAW_FOLDER)
-        print(f"📂 Changed directory to: {RAW_FOLDER}")
+        
+        # Get all available images
+        images = driver.select_all("img")
+        total_images = len(images)  # This will be number_of_prompts * 4
+        
+        if total_images == 0:
+            raise Exception("No images found to download")
+            
+        print(f"Found {total_images} images to download")
         
         downloaded_count = 0
         max_attempts = 3
         
-        while downloaded_count < 4:
+        # Download the most recent images first
+        for idx in range(total_images):
             try:
-                images = driver.select_all("img")[:4]
-                current_image = images[downloaded_count]
-                
+                current_image = images[idx]
                 current_image.click()
                 time.sleep(2)
+                
                 img_element = driver.wait_for_element('img[style="filter: none;"]')
                 img_url = img_element.get_attribute("src")
                 
-                # Download image
                 if download_with_retry(img_url):
                     downloaded_count += 1
-                    print(f"✅ Downloaded image {downloaded_count}/4")
+                    print(f"✅ Downloaded image {downloaded_count}/{total_images}")
                 else:
-                    print(f"⚠️ Failed to download image {downloaded_count + 1}")
+                    print(f"⚠️ Failed to download image {idx + 1}")
                 
                 exit_button = driver.wait_for_element('button[title="Close"]')
                 exit_button.click()
                 
             except Exception as e:
-                print(f"⚠️ Error downloading image {downloaded_count + 1}: {e}")
+                print(f"⚠️ Error downloading image {idx + 1}: {e}")
                 time.sleep(2)
-            
-        # Verify downloads
-        files = os.listdir(RAW_FOLDER)
-        image_files = [f for f in files if f.endswith(('.png', '.jpg', '.jpeg'))]
         
-        if not image_files:
+        if downloaded_count == 0:
             raise Exception("No images were downloaded successfully")
             
-        print(f"✅ Successfully downloaded {len(image_files)} images to {RAW_FOLDER}")
+        print(f"✅ Successfully downloaded {downloaded_count} images")
         return RAW_FOLDER
 
     except Exception as e:
