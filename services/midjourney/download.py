@@ -5,19 +5,27 @@ import shutil
 import pathlib
 import subprocess
 from config.settings import BASE_OUTPUT_FOLDER, DOWNLOADS_FOLDER
+import platform
 
-def download_with_retry(url, max_retries=10):
-    """Download file using yt-dlp with retries"""
+def download_with_retry(url, max_retries=5):
+    """Download file using curl with retries"""
     # Change to the raw folder directory
     os.chdir(BASE_OUTPUT_FOLDER)
     
+    # Set User-Agent based on platform
+    user_agent = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        if platform.system() == "Windows"
+        else "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    )
+    
     for attempt in range(max_retries):
         try:
-            # Use yt-dlp to download the file
             command = [
-                'yt-dlp',
-                # '--no-warnings',
-                # '--quiet',
+                'curl',
+                '-H', f'User-Agent: {user_agent}',
+                '-H', 'Referer: https://www.midjourney.com/',
+                '-O',
                 url
             ]
             subprocess.run(command, check=True)
@@ -25,10 +33,10 @@ def download_with_retry(url, max_retries=10):
         except subprocess.CalledProcessError as e:
             if attempt < max_retries - 1:
                 print(f"Download attempt {attempt + 1} failed. Retrying...")
-                time.sleep(2)  # Wait 2 seconds before retry
+                time.sleep(2)
             else:
-                print(f"All download attempts failed for URL: {url}")
-                raise e
+                print(f"❌ All download attempts failed for URL: {url}")
+                return False
 
 def download_images(driver, raw_folder_name):
     """Downloads selected images from MidJourney."""

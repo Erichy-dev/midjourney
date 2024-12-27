@@ -7,7 +7,8 @@ from config.settings import (
     WAIT_TIME_BETWEEN_PROMPTS,
     SEAMLESS_PATTERN_FOLDER,
     DIGITAL_PAPER_FOLDER,
-    INPUT_EXCEL_FILE
+    PROJECT_ROOT,
+    BASE_OUTPUT_FOLDER
 )
 from utils.image_processor import process_images, sanitize_name
 from .navigation import ensure_on_organize_page
@@ -77,7 +78,9 @@ def update_excel_with_results(product_data, raw_folder_path, processed_folder_pa
     """Update the Excel file with processing results."""
     try:
         print("\nUpdating Excel file with results...")
-        workbook = openpyxl.load_workbook("template (4).xlsx")
+        # Use PROJECT_ROOT to get the Excel file from the root directory
+        excel_path = os.path.join(PROJECT_ROOT, "template (4).xlsx")
+        workbook = openpyxl.load_workbook(excel_path)
         sheet = workbook.active
         
         # Find the row for this product
@@ -111,7 +114,8 @@ def update_excel_with_results(product_data, raw_folder_path, processed_folder_pa
         sheet[f'M{target_row}'] = product_data.get('Premade Description', '')
         sheet[f'N{target_row}'] = product_data.get('Full Description', '')
         
-        workbook.save("template (4).xlsx")
+        # Save back to the root directory
+        workbook.save(excel_path)
         print("✅ Excel file updated successfully")
             
     except Exception as e:
@@ -127,26 +131,22 @@ def process_product(driver, product_data, idx):
         product_type = product_data.get('Product Type', '')
         target_folder = SEAMLESS_PATTERN_FOLDER if product_type == "Seamless Pattern" else DIGITAL_PAPER_FOLDER
 
-        raw_folder_path = None
-        share_link = None
-
+        # Send prompts and get raw images
         send_prompts_to_midjourney(driver, [product_data])
         
-        # Process images directly to target folder
-        process_images(raw_folder_path, target_folder)
-
-        # After processing is complete
+        # Images are already processed in send_prompts_to_midjourney
+        # No need to process them again here
+        
+        # Get the share link from Google Drive
         share_link = upload_to_google_drive(target_folder)
         
         if share_link:
             print(f"✅ Uploaded to Google Drive: {share_link}")
         else:
             print("⚠️ Failed to upload to Google Drive")
-            print("Keeping local folders for retry")
 
         print(f"✅ Product processed successfully!")
-        # Return both the paths and the updated product_data
-        return product_data, raw_folder_path, target_folder, share_link
+        return product_data, BASE_OUTPUT_FOLDER, target_folder, share_link
         
     except Exception as e:
         logging.error(f"Error processing product: {e}")
