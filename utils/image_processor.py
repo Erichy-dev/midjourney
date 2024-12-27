@@ -14,7 +14,7 @@ def process_images(raw_folder_path, target_folder):
         # Ensure the target folder exists
         os.makedirs(target_folder, exist_ok=True)
         
-        # Get list of image files
+        # Get list of image files from raw folder
         image_files = [f for f in os.listdir(raw_folder_path) 
                       if f.lower().endswith(('.png', '.jpg', '.jpeg'))][:4]
         
@@ -29,7 +29,9 @@ def process_images(raw_folder_path, target_folder):
         for idx, filename in enumerate(image_files):
             try:
                 input_path = os.path.join(raw_folder_path, filename)
-                output_path = os.path.join(target_folder, filename)
+                # Generate a new filename with index to avoid conflicts
+                new_filename = f"image_{idx + 1}.png"
+                output_path = os.path.join(target_folder, new_filename)
                 
                 print(f"\nProcessing image {idx + 1}/{len(image_files)}: {filename}")
                 

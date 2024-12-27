@@ -127,17 +127,14 @@ def process_product(driver, product_data, idx):
     try:
         print(f"🚀 Starting processing for: {product_data.get('Product Name', '')}")
 
-        # Determine the target folder based on product type
+        # Determine the target folder based on product type - use ONLY the main folder
         product_type = product_data.get('Product Type', '')
         target_folder = SEAMLESS_PATTERN_FOLDER if product_type == "Seamless Pattern" else DIGITAL_PAPER_FOLDER
 
-        # Send prompts and get raw images
+        # Send prompts and get raw images - don't pass any subfolder info
         send_prompts_to_midjourney(driver, [product_data])
         
-        # Images are already processed in send_prompts_to_midjourney
-        # No need to process them again here
-        
-        # Get the share link from Google Drive
+        # Get the share link from Google Drive - use main folder only
         share_link = upload_to_google_drive(target_folder)
         
         if share_link:
