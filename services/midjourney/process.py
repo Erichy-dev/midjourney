@@ -75,47 +75,36 @@ def send_prompts_to_midjourney(driver, data):
         logging.error(f"Error during prompt submission: {e}")
         raise
 
-def update_excel_with_results(product_data, raw_folder_path, processed_folder_path, share_link):
-    """Update the Excel file with processing results."""
+def update_excel_with_results(product_data, raw_folder_path, target_folders, share_links):
+    """Update Excel with results from multiple prompts"""
     try:
         print("\nUpdating Excel file with results...")
-        # Use PROJECT_ROOT to get the Excel file from the root directory
         excel_path = os.path.join(PROJECT_ROOT, "template (4).xlsx")
         workbook = openpyxl.load_workbook(excel_path)
         sheet = workbook.active
         
-        # Find the row for this product
+        # Find or create row for this product
         product_name = product_data.get('Product Name', '')
         target_row = None
         
-        # Find the row with the matching product name
         for row in range(2, sheet.max_row + 1):
             if sheet.cell(row=row, column=1).value == product_name:
                 target_row = row
                 break
-        
-        # If row doesn't exist, create a new one
+                
         if not target_row:
             target_row = sheet.max_row + 1
-            print(f"Creating new row at position {target_row}")
-        
-        # Update the row
+            
+        # Update with combined results
         sheet[f'A{target_row}'] = product_data.get('Product Name', '')
         sheet[f'B{target_row}'] = product_data.get('Product Type', '')
         sheet[f'C{target_row}'] = product_data.get('Category', '')
         sheet[f'D{target_row}'] = product_data.get('Theme', '')
         sheet[f'E{target_row}'] = str(product_data.get('Prompts', ''))
         sheet[f'F{target_row}'] = raw_folder_path
-        sheet[f'G{target_row}'] = processed_folder_path
-        sheet[f'H{target_row}'] = share_link
-        sheet[f'I{target_row}'] = os.path.join(processed_folder_path, 'listing_images') if processed_folder_path else ''
-        sheet[f'J{target_row}'] = os.path.join(processed_folder_path, 'download') if processed_folder_path else ''
-        sheet[f'K{target_row}'] = product_data.get('Title', '')
-        sheet[f'L{target_row}'] = product_data.get('Hook', '')
-        sheet[f'M{target_row}'] = product_data.get('Premade Description', '')
-        sheet[f'N{target_row}'] = product_data.get('Full Description', '')
+        sheet[f'G{target_row}'] = '\n'.join(target_folders)
+        sheet[f'H{target_row}'] = '\n'.join(share_links)
         
-        # Save back to the root directory
         workbook.save(excel_path)
         print("✅ Excel file updated successfully")
             
@@ -127,57 +116,63 @@ def process_product(driver, product_data, idx):
     """Processes a single product through the MidJourney workflow."""
     try:
         print(f"🚀 Starting processing for: {product_data.get('Product Name', '')}")
-
-        # Create folders if they don't exist
-        os.makedirs(RAW_FOLDER, exist_ok=True)
-        os.makedirs(SEAMLESS_PATTERN_FOLDER, exist_ok=True)
-        os.makedirs(DIGITAL_PAPER_FOLDER, exist_ok=True)
-
-        # Create product-specific folder names
+        
         theme = product_data.get('Theme', '').strip()
         category = product_data.get('Category', '').strip()
         product_type = product_data.get('Product Type', '').strip()
+        prompts = product_data.get('Prompts', [])
         
-        product_name = f"{theme} - {category} - {product_type}"
-        sanitized_product_name = sanitize_name(product_name)
-        
-        # Define paths
-        raw_folder_path = RAW_FOLDER  # Changed to use main RAW_FOLDER
-        target_folder = os.path.join(
-            SEAMLESS_PATTERN_FOLDER if product_type == "Seamless Pattern" else DIGITAL_PAPER_FOLDER,
-            sanitized_product_name
-        )
-
-        # Create target folder
-        os.makedirs(target_folder, exist_ok=True)
-        print(f"📂 Created target folder: {target_folder}")
-
-        # Send prompts and download images
-        send_prompts_to_midjourney(driver, [product_data])
-        
-        # Verify images exist
-        if not os.path.exists(raw_folder_path):
-            raise FileNotFoundError(f"Raw folder not found: {raw_folder_path}")
+        if not isinstance(prompts, list):
+            prompts = [prompts]  # Convert single prompt to list
             
-        image_files = [f for f in os.listdir(raw_folder_path) if f.endswith(('.png', '.jpg', '.jpeg'))]
-        if not image_files:
-            raise FileNotFoundError(f"No images found in {raw_folder_path}")
+        print(f"Found {len(prompts)} prompts to process")
+        
+        all_results = []
+        for prompt_idx, prompt in enumerate(prompts, 1):
+            try:
+                print(f"\n🎯 Processing prompt {prompt_idx}/{len(prompts)}")
+                print(f"Prompt: {prompt}")
+                
+                # Create prompt-specific folder names
+                prompt_name = f"{theme} - {category} - {product_type} - Prompt{prompt_idx}"
+                sanitized_prompt_name = sanitize_name(prompt_name)
+                
+                # Define paths for this prompt
+                raw_folder_path = RAW_FOLDER
+                target_folder = os.path.join(
+                    SEAMLESS_PATTERN_FOLDER if product_type == "Seamless Pattern" else DIGITAL_PAPER_FOLDER,
+                    sanitized_prompt_name
+                )
+                
+                # Create folders
+                os.makedirs(target_folder, exist_ok=True)
+                
+                # Send single prompt and wait for generation
+                send_prompts_to_midjourney(driver, [{**product_data, 'Prompts': [prompt]}])
+                
+                # Download and process images
+                if os.path.exists(raw_folder_path):
+                    process_images(raw_folder_path, target_folder)
+                    
+                    # Upload to Google Drive
+                    share_link = upload_to_google_drive(target_folder)
+                    
+                    if share_link:
+                        print(f"✅ Uploaded prompt {prompt_idx} to Google Drive: {share_link}")
+                        all_results.append((prompt, target_folder, share_link))
+                    else:
+                        print(f"⚠️ Failed to upload prompt {prompt_idx} to Google Drive")
+                
+            except Exception as e:
+                logging.error(f"Error processing prompt {prompt_idx}: {e}")
+                print(f"⚠️ Error with prompt {prompt_idx}: {e}")
+                continue
+        
+        if not all_results:
+            raise Exception("No prompts were processed successfully")
             
-        print(f"✅ Found {len(image_files)} images in raw folder")
-        
-        # Process images
-        process_images(raw_folder_path, target_folder)
-        
-        # Upload to Google Drive
-        share_link = upload_to_google_drive(target_folder)
-        
-        if share_link:
-            print(f"✅ Uploaded to Google Drive: {share_link}")
-        else:
-            print("⚠️ Failed to upload to Google Drive")
-
-        print(f"✅ Product processed successfully!")
-        return product_data, raw_folder_path, target_folder, share_link
+        # Return the combined results
+        return product_data, raw_folder_path, [r[1] for r in all_results], [r[2] for r in all_results]
         
     except Exception as e:
         logging.error(f"Error processing product: {e}")
