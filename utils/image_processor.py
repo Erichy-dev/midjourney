@@ -37,10 +37,12 @@ def process_images(raw_folder_path, target_folder):
                 # Use FFmpeg for upscaling
                 command = [
                     'ffmpeg',
-                    '-i', input_path,  # Input file
+                    '-hide_banner',     # Hide FFmpeg compilation info
+                    '-loglevel', 'error',  # Only show errors
+                    '-i', input_path,   # Input file
                     '-vf', 'scale=3600:3600:flags=lanczos',  # Scale to 3600x3600 using Lanczos
                     '-compression_level', '6',  # Compression level (0-9)
-                    '-y',  # Overwrite output file if it exists
+                    '-y',               # Overwrite output file if it exists
                     output_path
                 ]
                 
