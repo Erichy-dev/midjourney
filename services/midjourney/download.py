@@ -10,7 +10,7 @@ import platform
 def download_with_retry(url, max_retries=5):
     """Download file using curl with retries"""
     # Change to the raw folder directory
-    os.chdir(BASE_OUTPUT_FOLDER)
+    os.chdir(RAW_FOLDER)
     
     # Set User-Agent based on platform
     user_agent = (
