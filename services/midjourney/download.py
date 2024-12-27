@@ -1,8 +1,3 @@
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.action_chains import ActionChains
 import time
 import logging
 import os
@@ -16,58 +11,43 @@ def download_images(driver, raw_folder_name):
     print("Selecting and downloading images...")
     try:
         # Select images
-        images = driver.find_elements(By.CSS_SELECTOR, "img")[:4]
-        for image in images:
-            ActionChains(driver).key_down(Keys.SHIFT).click(image).key_up(Keys.SHIFT).perform()
+        i = 0
+        for i in range(4):
+            images = driver.select_all("img")[:4]
+            images[i].click()
+            time.sleep(3)
+            download_button = driver.wait_for_element('button[title="Download Image"]')
+            download_button.click()
+            time.sleep(3)
+            exit_button = driver.wait_for_element('button[title="Close"]')
+            exit_button.click()
+            driver.google_get("https://www.midjourney.com/archive", bypass_cloudflare=True)
 
-        # Find and click download button
-        download_button = None
-        for _ in range(3):
-            try:
-                download_button = WebDriverWait(driver, 30).until(
-                    EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Download')]"))
-                )
-                download_button.click()
-                time.sleep(45)
-                break
-            except Exception:
-                ensure_on_organize_page(driver)
-                images = driver.find_elements(By.CSS_SELECTOR, "img")[:4]
-                for image in images:
-                    ActionChains(driver).key_down(Keys.SHIFT).click(image).key_up(Keys.SHIFT).perform()
+        time.sleep(10)
 
-        if not download_button:
-            raise Exception("Failed to locate download button after multiple attempts")
-
-        print(f"Searching for latest Midjourney zip file in: {DOWNLOADS_FOLDER}")
-        zip_files = [f for f in os.listdir(DOWNLOADS_FOLDER) 
-                    if f.startswith('midjourney') and f.endswith('.zip')]
+        print(f"Searching for latest downloaded images in: {DOWNLOADS_FOLDER}")
         
-        if not zip_files:
-            print("No Midjourney zip files found!")
-            return
-            
-        # Wait a bit for the download to complete and file to be visible
+        # Wait a bit for downloads to complete
         time.sleep(5)
         
-        # Get the latest midjourney zip file
+        # Get all image files from downloads folder
         downloads_path = pathlib.Path(DOWNLOADS_FOLDER)
-        all_files = list(downloads_path.glob("midjourney_session*.zip"))
+        image_files = list(downloads_path.glob("*.png"))  # Assuming PNG format, adjust if needed
         
-        if not all_files:
-            raise Exception(f"No midjourney zip files found in {DOWNLOADS_FOLDER}")
+        if not image_files:
+            raise Exception(f"No downloaded images found in {DOWNLOADS_FOLDER}")
             
-        zip_file_path = max(all_files, key=os.path.getctime)
-        print(f"Found latest zip file: {zip_file_path}")
+        # Sort by creation time to get the 4 most recent images
+        latest_images = sorted(image_files, key=os.path.getctime, reverse=True)[:4]
+        print(f"Found {len(latest_images)} recent images")
         
-        # Create and extract to destination folder
-        extracted_folder_path = os.path.join(BASE_OUTPUT_FOLDER, raw_folder_name)
-        os.makedirs(extracted_folder_path, exist_ok=True)
+        # Move images directly to BASE_OUTPUT_FOLDER (Raw Folders)
+        for img_path in latest_images:
+            dest_path = os.path.join(BASE_OUTPUT_FOLDER, img_path.name)
+            shutil.move(str(img_path), dest_path)
+            print(f"Moved: {img_path.name}")
         
-        print(f"Extracting to: {extracted_folder_path}")
-        shutil.unpack_archive(zip_file_path, extracted_folder_path)
-        
-        return extracted_folder_path
+        return BASE_OUTPUT_FOLDER
 
     except Exception as e:
         logging.error(f"Error in download_images: {e}")

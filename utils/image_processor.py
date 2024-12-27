@@ -16,7 +16,7 @@ def process_images(raw_folder_path, processed_folder_path):
         
         # Get list of image files
         image_files = [f for f in os.listdir(raw_folder_path) 
-                      if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+                      if f.lower().endswith(('.png', '.jpg', '.jpeg'))][:4]
         
         if not image_files:
             print(f"⚠️ No images found in {raw_folder_path}")

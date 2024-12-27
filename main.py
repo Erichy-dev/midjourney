@@ -3,16 +3,16 @@ import logging
 import os
 import openpyxl
 from services.midjourney.process import update_excel_with_results
-from utils.browser import connect_to_existing_edge
 from utils.excel import read_prompts_from_excel
 from services.midjourney import process_product
 from services.google_drive import init_google_drive, set_google_drive_instance
 from config.settings import INPUT_EXCEL_FILE  # Import from settings
-
+from botasaurus.browser import browser, Driver
 # Constants
 BACKUP_FOLDER = "backups"
 
-def process_all_products():
+@browser
+def process_all_products(driver: Driver, data):
     """Process all products sequentially"""
     # Initialize services
     print("\n🔄 Initializing services...")
@@ -24,7 +24,7 @@ def process_all_products():
     print("✅ Connected to Google Drive")
     
     # Get browser instance
-    driver = connect_to_existing_edge()
+    driver.google_get("https://midjourney.com/archive", bypass_cloudflare=True, accept_google_cookies=True)
     
     print("\n🔍 Before we begin, please verify:")
     print("1. You're logged into Discord")
@@ -88,15 +88,15 @@ def process_all_products():
                     break
 
     finally:
-        # Clean up
-        driver.quit()
+        # Final summary
+        print(f"\n📊 Processing complete!")
+        print(f"✅ Successfully processed: {success_count}/{total_products} products")
+        if success_count < total_products:
+            print(f"⚠️ Failed: {total_products - success_count} products")
+            print("Check the backup files in the 'backups' folder for details")
         
-    # Final summary
-    print(f"\n📊 Processing complete!")
-    print(f"✅ Successfully processed: {success_count}/{total_products} products")
-    if success_count < total_products:
-        print(f"⚠️ Failed: {total_products - success_count} products")
-        print("Check the backup files in the 'backups' folder for details")
+        return "Done"
+        
 
 if __name__ == "__main__":
     process_all_products() 
