@@ -125,7 +125,20 @@ def process_product(driver, product_data, idx):
         if not isinstance(prompts, list):
             prompts = [prompts]  # Convert single prompt to list
             
-        print(f"Found {len(prompts)} prompts to process")
+        # Create single product folder
+        product_name = f"{theme} - {category} - {product_type}"
+        sanitized_product_name = sanitize_name(product_name)
+        
+        # Define paths once for the product
+        raw_folder_path = RAW_FOLDER
+        target_folder = os.path.join(
+            SEAMLESS_PATTERN_FOLDER if product_type == "Seamless Pattern" else DIGITAL_PAPER_FOLDER,
+            sanitized_product_name
+        )
+        
+        # Create folders
+        os.makedirs(target_folder, exist_ok=True)
+        print(f"Found {len(prompts)} prompts to process for: {sanitized_product_name}")
         
         all_results = []
         for prompt_idx, prompt in enumerate(prompts, 1):
@@ -133,35 +146,13 @@ def process_product(driver, product_data, idx):
                 print(f"\n🎯 Processing prompt {prompt_idx}/{len(prompts)}")
                 print(f"Prompt: {prompt}")
                 
-                # Create prompt-specific folder names
-                prompt_name = f"{theme} - {category} - {product_type} - Prompt{prompt_idx}"
-                sanitized_prompt_name = sanitize_name(prompt_name)
-                
-                # Define paths for this prompt
-                raw_folder_path = RAW_FOLDER
-                target_folder = os.path.join(
-                    SEAMLESS_PATTERN_FOLDER if product_type == "Seamless Pattern" else DIGITAL_PAPER_FOLDER,
-                    sanitized_prompt_name
-                )
-                
-                # Create folders
-                os.makedirs(target_folder, exist_ok=True)
-                
                 # Send single prompt and wait for generation
                 send_prompts_to_midjourney(driver, [{**product_data, 'Prompts': [prompt]}])
                 
                 # Download and process images
                 if os.path.exists(raw_folder_path):
                     process_images(raw_folder_path, target_folder)
-                    
-                    # Upload to Google Drive
-                    share_link = upload_to_google_drive(target_folder)
-                    
-                    if share_link:
-                        print(f"✅ Uploaded prompt {prompt_idx} to Google Drive: {share_link}")
-                        all_results.append((prompt, target_folder, share_link))
-                    else:
-                        print(f"⚠️ Failed to upload prompt {prompt_idx} to Google Drive")
+                    all_results.append((prompt, target_folder))
                 
             except Exception as e:
                 logging.error(f"Error processing prompt {prompt_idx}: {e}")
@@ -170,9 +161,16 @@ def process_product(driver, product_data, idx):
         
         if not all_results:
             raise Exception("No prompts were processed successfully")
+        
+        # Upload to Google Drive once after all prompts are processed
+        share_link = upload_to_google_drive(target_folder)
+        if share_link:
+            print(f"✅ Uploaded to Google Drive: {share_link}")
+        else:
+            print("⚠️ Failed to upload to Google Drive")
             
         # Return the combined results
-        return product_data, raw_folder_path, [r[1] for r in all_results], [r[2] for r in all_results]
+        return product_data, raw_folder_path, target_folder, share_link
         
     except Exception as e:
         logging.error(f"Error processing product: {e}")
