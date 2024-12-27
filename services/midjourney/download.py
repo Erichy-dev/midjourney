@@ -4,7 +4,7 @@ import os
 import shutil
 import pathlib
 import subprocess
-from config.settings import BASE_OUTPUT_FOLDER, DOWNLOADS_FOLDER
+from config.settings import BASE_OUTPUT_FOLDER, DOWNLOADS_FOLDER, RAW_FOLDER
 import platform
 
 def download_with_retry(url, max_retries=5):
@@ -42,7 +42,14 @@ def download_images(driver, raw_folder_name):
     """Downloads selected images from MidJourney."""
     print("Selecting and downloading images...")
     try:
-        # Select images
+        # Create raw folder if it doesn't exist
+        raw_folder_path = os.path.join(RAW_FOLDER, raw_folder_name)
+        os.makedirs(raw_folder_path, exist_ok=True)
+        
+        # Change to raw folder for downloads
+        os.chdir(raw_folder_path)
+        
+        # Select and download images
         images = driver.select_all("img")[:4]
         for image in images:
             image.click()
@@ -53,7 +60,7 @@ def download_images(driver, raw_folder_name):
             exit_button = driver.wait_for_element('button[title="Close"]')
             exit_button.click()
 
-        return BASE_OUTPUT_FOLDER
+        return raw_folder_path
 
     except Exception as e:
         logging.error(f"Error in download_images: {e}")

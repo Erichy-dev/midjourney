@@ -8,7 +8,8 @@ from config.settings import (
     SEAMLESS_PATTERN_FOLDER,
     DIGITAL_PAPER_FOLDER,
     PROJECT_ROOT,
-    BASE_OUTPUT_FOLDER
+    BASE_OUTPUT_FOLDER,
+    RAW_FOLDER
 )
 from utils.image_processor import process_images, sanitize_name
 from .navigation import ensure_on_organize_page
@@ -127,14 +128,29 @@ def process_product(driver, product_data, idx):
     try:
         print(f"🚀 Starting processing for: {product_data.get('Product Name', '')}")
 
-        # Determine the target folder based on product type - use ONLY the main folder
-        product_type = product_data.get('Product Type', '')
-        target_folder = SEAMLESS_PATTERN_FOLDER if product_type == "Seamless Pattern" else DIGITAL_PAPER_FOLDER
+        # Create product-specific folder names
+        theme = product_data.get('Theme', '').strip()
+        category = product_data.get('Category', '').strip()
+        product_type = product_data.get('Product Type', '').strip()
+        
+        # Create standardized folder names
+        product_name = f"{theme} - {category} - {product_type}"
+        sanitized_product_name = sanitize_name(product_name)
+        
+        # Define folder paths
+        raw_folder_path = os.path.join(RAW_FOLDER, f"Raw {sanitized_product_name}")
+        target_folder = os.path.join(
+            SEAMLESS_PATTERN_FOLDER if product_type == "Seamless Pattern" else DIGITAL_PAPER_FOLDER,
+            sanitized_product_name
+        )
 
-        # Send prompts and get raw images - don't pass any subfolder info
+        # Send prompts and download images
         send_prompts_to_midjourney(driver, [product_data])
         
-        # Get the share link from Google Drive - use main folder only
+        # Process images
+        process_images(raw_folder_path, target_folder)
+        
+        # Upload to Google Drive
         share_link = upload_to_google_drive(target_folder)
         
         if share_link:
@@ -143,7 +159,7 @@ def process_product(driver, product_data, idx):
             print("⚠️ Failed to upload to Google Drive")
 
         print(f"✅ Product processed successfully!")
-        return product_data, BASE_OUTPUT_FOLDER, target_folder, share_link
+        return product_data, raw_folder_path, target_folder, share_link
         
     except Exception as e:
         logging.error(f"Error processing product: {e}")
