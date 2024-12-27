@@ -3,6 +3,7 @@ import os
 import shutil
 import pathlib
 import logging
+import subprocess
 from config.settings import SEAMLESS_PATTERN_FOLDER, DIGITAL_PAPER_FOLDER
 
 def sanitize_name(name):
@@ -26,25 +27,38 @@ def process_images(raw_folder_path, target_folder):
         print(f"From: {raw_folder_path}")
         print(f"To: {target_folder}")
         
-        for idx, filename in enumerate(image_files):
+        for filename in image_files:
             try:
                 input_path = os.path.join(raw_folder_path, filename)
-                # Generate a new filename with index to avoid conflicts
-                new_filename = f"image_{idx + 1}.png"
-                output_path = os.path.join(target_folder, new_filename)
+                output_path = os.path.join(target_folder, filename)  # Keep original filename
                 
-                print(f"\nProcessing image {idx + 1}/{len(image_files)}: {filename}")
+                print(f"\nProcessing: {filename}")
                 
-                with Image.open(input_path) as img:
-                    print(f"Original size: {img.size}")
-                    img = img.resize((3600, 3600), Image.LANCZOS)
-                    print(f"Resized to: {img.size}")
+                # Use FFmpeg for upscaling
+                command = [
+                    'ffmpeg',
+                    '-i', input_path,  # Input file
+                    '-vf', 'scale=3600:3600:flags=lanczos',  # Scale to 3600x3600 using Lanczos
+                    '-compression_level', '6',  # Compression level (0-9)
+                    '-y',  # Overwrite output file if it exists
+                    output_path
+                ]
+                
+                print(f"Upscaling image to 3600x3600...")
+                subprocess.run(command, check=True)
+                
+                # Set DPI using PIL
+                with Image.open(output_path) as img:
                     img.save(output_path, dpi=(300, 300))
-                    print(f"Saved with 300 DPI to: {output_path}")
-            
+                    print(f"Set DPI to 300 and saved to: {output_path}")
+                    
+            except subprocess.CalledProcessError as e:
+                print(f"❌ FFmpeg error processing {filename}: {e}")
+                logging.error(f"FFmpeg error processing {filename}: {e}")
+                continue
             except Exception as e:
-                print(f"❌ Error processing image {filename}: {e}")
-                logging.error(f"Error processing image {filename}: {e}")
+                print(f"❌ Error processing {filename}: {e}")
+                logging.error(f"Error processing {filename}: {e}")
                 continue
         
         # Verify processed files
