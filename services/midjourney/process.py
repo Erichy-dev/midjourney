@@ -75,41 +75,46 @@ def send_prompts_to_midjourney(driver, data):
         logging.error(f"Error during prompt submission: {e}")
         raise
 
-def update_excel_with_results(product_data, raw_folder_path, target_folders, share_links):
-    """Update Excel with results from multiple prompts"""
+def update_excel_with_results(product_data, raw_folder_path, target_folder, share_link):
+    """Update Excel with results for a single product"""
     try:
-        print("\nUpdating Excel file with results...")
-        excel_path = os.path.join(PROJECT_ROOT, "template (4).xlsx")
-        workbook = openpyxl.load_workbook(excel_path)
+        print("\n🔍 Debug: Starting Excel update process...")
+        results_excel_path = os.path.join(PROJECT_ROOT, "template (4).xlsx")
+        
+        if not os.path.exists(results_excel_path):
+            print(f"📝 Creating new Excel file at: {results_excel_path}")
+            workbook = openpyxl.Workbook()
+        else:
+            workbook = openpyxl.load_workbook(results_excel_path)
+            
         sheet = workbook.active
         
-        # Find or create row for this product
-        product_name = product_data.get('Product Name', '')
-        target_row = None
+        # Find the first empty row
+        target_row = 1
+        while sheet[f'A{target_row}'].value is not None:
+            target_row += 1
         
-        for row in range(2, sheet.max_row + 1):
-            if sheet.cell(row=row, column=1).value == product_name:
-                target_row = row
-                break
-                
-        if not target_row:
-            target_row = sheet.max_row + 1
+        print(f"Found first empty row at: {target_row}")
             
-        # Update with combined results
-        sheet[f'A{target_row}'] = product_data.get('Product Name', '')
-        sheet[f'B{target_row}'] = product_data.get('Product Type', '')
-        sheet[f'C{target_row}'] = product_data.get('Category', '')
-        sheet[f'D{target_row}'] = product_data.get('Theme', '')
-        sheet[f'E{target_row}'] = str(product_data.get('Prompts', ''))
-        sheet[f'F{target_row}'] = raw_folder_path
-        sheet[f'G{target_row}'] = '\n'.join(target_folders)
-        sheet[f'H{target_row}'] = '\n'.join(share_links)
+        # Update with results
+        sheet[f'A{target_row}'] = f"{product_data.get('Theme', '')} - {product_data.get('Category', '')} - {product_data.get('Product Type', '')}"
+        sheet[f'B{target_row}'] = product_data.get('Category', '')
+        sheet[f'C{target_row}'] = product_data.get('Theme', '')
+        sheet[f'D{target_row}'] = product_data.get('Prompts', '')
+        sheet[f'E{target_row}'] = raw_folder_path
+        sheet[f'F{target_row}'] = target_folder
+        sheet[f'G{target_row}'] = share_link
         
-        workbook.save(excel_path)
-        print("✅ Excel file updated successfully")
+        try:
+            workbook.save(results_excel_path)
+            print(f"✅ Excel file updated at row {target_row}")
+        except Exception as e:
+            print(f"❌ Error saving workbook: {e}")
+            raise
             
     except Exception as e:
-        print(f"⚠️ Error updating Excel file: {e}")
+        print(f"⚠️ Error in Excel update process: {e}")
+        logging.error(f"Error updating Excel file: {e}")
         raise
 
 def process_product(driver, product_data, idx):
