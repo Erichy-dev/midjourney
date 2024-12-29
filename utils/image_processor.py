@@ -21,8 +21,10 @@ def process_images(raw_folder_path, target_folder, expected_count=None):
         
         # Take only the expected number of most recent images
         if expected_count:
-            image_files = image_files[:expected_count]
-            
+            if len(image_files) < expected_count:
+                print(f"⚠️ Warning: Found fewer images ({len(image_files)}) than expected ({expected_count})")
+            image_files = image_files[:expected_count]  # Take only the expected number of most recent images
+        
         if not image_files:
             print(f"⚠️ No images found in {raw_folder_path}")
             return
@@ -31,6 +33,7 @@ def process_images(raw_folder_path, target_folder, expected_count=None):
         print(f"From: {raw_folder_path}")
         print(f"To: {target_folder}")
         
+        processed_count = 0
         for filename in image_files:
             try:
                 input_path = os.path.join(raw_folder_path, filename)
@@ -38,7 +41,7 @@ def process_images(raw_folder_path, target_folder, expected_count=None):
                 
                 print(f"\nProcessing: {filename}")
                 
-                # Process using PIL instead of FFmpeg
+                # Process using PIL
                 with Image.open(input_path) as img:
                     # Resize to 3600x3600 using Lanczos resampling
                     img = img.resize((3600, 3600), Image.Resampling.LANCZOS)
@@ -49,15 +52,14 @@ def process_images(raw_folder_path, target_folder, expected_count=None):
                         dpi=(300, 300),  # Set DPI to 300
                         optimize=True  # Enable optimization
                     )
+                processed_count += 1
                     
             except Exception as e:
                 print(f"❌ Error processing {filename}: {e}")
                 logging.error(f"Error processing {filename}: {e}")
                 continue
         
-        processed_files = [f for f in os.listdir(target_folder) 
-                         if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
-        print(f"\n✅ Processed {len(processed_files)}/{len(image_files)} images")
+        print(f"\n✅ Processed {processed_count}/{expected_count if expected_count else len(image_files)} images")
         
     except Exception as e:
         print(f"❌ Error processing folder: {e}")

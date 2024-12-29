@@ -184,8 +184,8 @@ def process_product(driver, product_data, idx):
             else:
                 raise Exception(f"Raw folder not found: {raw_folder_path}")
             
-            # Upload to Google Drive
-            share_link = upload_to_google_drive(target_folder)
+            # Upload to Google Drive with expected count
+            share_link = upload_to_google_drive(target_folder, expected_count=expected_images)
             if share_link:
                 print(f"✅ Uploaded to Google Drive: {share_link}")
             else:

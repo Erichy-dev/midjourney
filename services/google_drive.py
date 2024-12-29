@@ -29,7 +29,7 @@ def get_drive_instance():
     """Get the global drive instance"""
     return _drive_instance
 
-def upload_to_google_drive(target_folder, max_retries=3):
+def upload_to_google_drive(target_folder, expected_count=None, max_retries=3):
     """Upload the processed images folder to Google Drive maintaining folder structure"""
     for attempt in range(max_retries):
         try:
@@ -56,12 +56,22 @@ def upload_to_google_drive(target_folder, max_retries=3):
                 'withLink': True
             })
             
-            # Get list of local files to upload
-            local_files = [f for f in os.listdir(target_folder) if os.path.isfile(os.path.join(target_folder, f))]
+            # Get list of local files to upload, sorted by creation time (newest first)
+            local_files = [f for f in os.listdir(target_folder) 
+                         if os.path.isfile(os.path.join(target_folder, f)) and 
+                         f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+            local_files.sort(key=lambda x: os.path.getctime(os.path.join(target_folder, x)), reverse=True)
+            
+            # Take only the expected number of most recent images
+            if expected_count:
+                if len(local_files) < expected_count:
+                    print(f"⚠️ Warning: Found fewer images ({len(local_files)}) than expected ({expected_count})")
+                local_files = local_files[:expected_count]
+            
             uploaded_count = 0
             uploaded_files_links = []
             
-            # Upload all files in the folder and make them public
+            # Upload files
             for filename in local_files:
                 filepath = os.path.join(target_folder, filename)
                 try:
