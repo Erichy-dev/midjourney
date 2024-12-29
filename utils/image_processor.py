@@ -38,27 +38,18 @@ def process_images(raw_folder_path, target_folder, expected_count=None):
                 
                 print(f"\nProcessing: {filename}")
                 
-                command = [
-                    'ffmpeg',
-                    '-hide_banner',
-                    '-loglevel', 'error',
-                    '-i', input_path,
-                    '-vf', 'scale=3600:3600:flags=lanczos',
-                    '-compression_level', '6',
-                    '-y',
-                    output_path
-                ]
-                
-                subprocess.run(command, check=True)
-                
-                # Set DPI using PIL
-                with Image.open(output_path) as img:
-                    img.save(output_path, dpi=(300, 300))
+                # Process using PIL instead of FFmpeg
+                with Image.open(input_path) as img:
+                    # Resize to 3600x3600 using Lanczos resampling
+                    img = img.resize((3600, 3600), Image.Resampling.LANCZOS)
+                    # Save with high quality and DPI settings
+                    img.save(
+                        output_path,
+                        quality=95,  # High quality for JPEGs
+                        dpi=(300, 300),  # Set DPI to 300
+                        optimize=True  # Enable optimization
+                    )
                     
-            except subprocess.CalledProcessError as e:
-                print(f"❌ FFmpeg error processing {filename}: {e}")
-                logging.error(f"FFmpeg error processing {filename}: {e}")
-                continue
             except Exception as e:
                 print(f"❌ Error processing {filename}: {e}")
                 logging.error(f"Error processing {filename}: {e}")
