@@ -21,7 +21,7 @@ def download_with_retry(url, max_retries=5):
             command = [
                 'bash',
                 '-c',
-                f"cd 'paste_path_here' && curl -H 'User-Agent: {user_agent}' -H 'Referer: https://www.midjourney.com/' -O {url}"
+                f"cd '{RAW_FOLDER}' && curl -H 'User-Agent: {user_agent}' -H 'Referer: https://www.midjourney.com/' -O '{url}'"
             ]
             subprocess.run(command, check=True)
             return True
