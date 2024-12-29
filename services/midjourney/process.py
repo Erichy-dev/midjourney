@@ -75,7 +75,7 @@ def send_prompts_to_midjourney(driver, data):
         logging.error(f"Error during prompt submission: {e}")
         raise
 
-def update_excel_with_results(product_data, raw_folder_path, target_folder, share_link):
+def update_excel_with_results(product_data, raw_folder_path, target_folder, drive_links):
     """Update Excel with results for a single product"""
     try:
         print("\n🔍 Debug: Starting Excel update process...")
@@ -108,7 +108,10 @@ def update_excel_with_results(product_data, raw_folder_path, target_folder, shar
         sheet[f'D{target_row}'] = prompts  # Now using the converted string
         sheet[f'E{target_row}'] = raw_folder_path
         sheet[f'F{target_row}'] = target_folder
-        sheet[f'G{target_row}'] = share_link
+        # Store individual image links separated by newlines
+        sheet[f'G{target_row}'] = '\n'.join(drive_links['file_links']) if drive_links else ''
+        # Store folder link in a separate column
+        sheet[f'H{target_row}'] = drive_links['folder_link'] if drive_links else ''
         
         try:
             workbook.save(results_excel_path)

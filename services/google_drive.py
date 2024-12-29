@@ -43,16 +43,30 @@ def upload_to_google_drive(target_folder, max_retries=3):
             
             # Create main category folder (if it doesn't exist)
             main_folder = create_or_get_folder(drive, f"Digital Paper Store - {folder_type}")
+            # Set public permissions for main folder
+            main_folder.InsertPermission({
+                'type': 'anyone',
+                'role': 'reader',
+                'withLink': True
+            })
             
             # Get the product folder name from the target path
             product_folder_name = os.path.basename(target_folder)
             
             # Create product subfolder
             product_folder = create_or_get_folder(drive, product_folder_name, parent_id=main_folder['id'])
+            # Set public permissions for product folder
+            product_folder.InsertPermission({
+                'type': 'anyone',
+                'role': 'reader',
+                'withLink': True
+            })
             
             # Get list of local files to upload
             local_files = [f for f in os.listdir(target_folder) if os.path.isfile(os.path.join(target_folder, f))]
             uploaded_count = 0
+            
+            uploaded_files_links = []  # New list to store individual file links
             
             # Upload all files in the folder
             for filename in local_files:
@@ -64,6 +78,14 @@ def upload_to_google_drive(target_folder, max_retries=3):
                     })
                     file_drive.SetContentFile(filepath)
                     file_drive.Upload()
+                    file_drive.InsertPermission({
+                        'type': 'anyone',
+                        'role': 'reader',
+                        'withLink': True
+                    })
+                    # Store the direct file link
+                    file_link = f"https://drive.google.com/uc?id={file_drive['id']}"
+                    uploaded_files_links.append(file_link)
                     uploaded_count += 1
                     print(f"✅ Uploaded file: {filename}")
                 except Exception as e:
@@ -74,9 +96,12 @@ def upload_to_google_drive(target_folder, max_retries=3):
                 raise Exception("No files were uploaded successfully")
             print(f"✅ Successfully uploaded {uploaded_count}/{len(local_files)} files")
 
-            # Generate and return shareable link for the product folder
-            share_link = f"https://drive.google.com/drive/folders/{product_folder['id']}?usp=sharing"
-            return share_link
+            # Return both folder link and individual file links
+            folder_link = f"https://drive.google.com/drive/folders/{product_folder['id']}?usp=sharing"
+            return {
+                'folder_link': folder_link,
+                'file_links': uploaded_files_links
+            }
             
         except Exception as e:
             if attempt < max_retries - 1:
