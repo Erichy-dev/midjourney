@@ -96,11 +96,16 @@ def update_excel_with_results(product_data, raw_folder_path, target_folder, shar
         
         print(f"Found first empty row at: {target_row}")
             
+        # Convert prompts list to string if necessary
+        prompts = product_data.get('Prompts', '')
+        if isinstance(prompts, list):
+            prompts = '\n'.join(prompts)  # Join multiple prompts with newlines
+            
         # Update with results
         sheet[f'A{target_row}'] = f"{product_data.get('Theme', '')} - {product_data.get('Category', '')} - {product_data.get('Product Type', '')}"
         sheet[f'B{target_row}'] = product_data.get('Category', '')
         sheet[f'C{target_row}'] = product_data.get('Theme', '')
-        sheet[f'D{target_row}'] = product_data.get('Prompts', '')
+        sheet[f'D{target_row}'] = prompts  # Now using the converted string
         sheet[f'E{target_row}'] = raw_folder_path
         sheet[f'F{target_row}'] = target_folder
         sheet[f'G{target_row}'] = share_link

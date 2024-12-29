@@ -22,7 +22,7 @@ def download_with_retry(url, max_retries=5):
     # Generate timestamp filename
     timestamp = time.strftime("%Y%m%d_%H%M%S")
     file_extension = os.path.splitext(url)[1] or '.png'  # Default to .png if no extension
-    custom_filename = f"midjourney_{timestamp}{file_extension}"
+    custom_filename = f"{timestamp}{file_extension}"
     
     for attempt in range(max_retries):
         try:
