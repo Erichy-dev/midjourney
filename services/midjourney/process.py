@@ -108,10 +108,8 @@ def update_excel_with_results(product_data, raw_folder_path, target_folder, driv
         sheet[f'D{target_row}'] = prompts  # Now using the converted string
         sheet[f'E{target_row}'] = raw_folder_path
         sheet[f'F{target_row}'] = target_folder
-        # Store individual image links separated by newlines
-        sheet[f'G{target_row}'] = '\n'.join(drive_links['file_links']) if drive_links else ''
-        # Store folder link in a separate column
-        sheet[f'H{target_row}'] = drive_links['folder_link'] if drive_links else ''
+        # Store only the folder link
+        sheet[f'G{target_row}'] = drive_links['folder_link'] if drive_links else ''
         
         try:
             workbook.save(results_excel_path)
@@ -142,14 +140,15 @@ def process_product(driver, product_data, idx):
         product_name = f"{theme} - {category} - {product_type}"
         sanitized_product_name = sanitize_name(product_name)
         
-        # Define paths
-        raw_folder_path = RAW_FOLDER
+        # Define paths - Using the product-specific raw folder
+        raw_folder_path = os.path.join(RAW_FOLDER, sanitized_product_name)
         target_folder = os.path.join(
             SEAMLESS_PATTERN_FOLDER if product_type == "Seamless Pattern" else DIGITAL_PAPER_FOLDER,
             sanitized_product_name
         )
         
         # Create folders
+        os.makedirs(raw_folder_path, exist_ok=True)  # Ensure raw folder exists
         os.makedirs(target_folder, exist_ok=True)
         print(f"Processing {len(prompts)} prompts for: {sanitized_product_name}")
         
@@ -168,15 +167,22 @@ def process_product(driver, product_data, idx):
             print(f"\n⏳ Waiting for {expected_images} images to generate...")
             wait_for_last_image_to_generate(driver)
             
-            # Download all images at once
-            expected_images = len(prompts) * 4  # 4 images per prompt
-            raw_folder_path = download_images(driver, sanitized_product_name, expected_count=expected_images)
+            # Download images - Make sure we're using the product-specific raw folder
+            downloaded_folder = download_images(driver, sanitized_product_name, expected_count=expected_images)
+            
+            # Verify the downloaded folder path matches our expected raw folder path
+            if downloaded_folder != raw_folder_path:
+                print(f"⚠️ Warning: Download path mismatch")
+                print(f"Expected: {raw_folder_path}")
+                print(f"Actual: {downloaded_folder}")
+                raw_folder_path = downloaded_folder
             
             # Process all images
             if os.path.exists(raw_folder_path):
-                expected_images = len(prompts) * 4  # 4 images per prompt
                 process_images(raw_folder_path, target_folder, expected_count=expected_images)
                 print(f"✅ Processed images for all prompts")
+            else:
+                raise Exception(f"Raw folder not found: {raw_folder_path}")
             
             # Upload to Google Drive
             share_link = upload_to_google_drive(target_folder)

@@ -7,10 +7,11 @@ import subprocess
 from config.settings import BASE_OUTPUT_FOLDER, DOWNLOADS_FOLDER, RAW_FOLDER
 import platform
 
-def download_with_retry(url, max_retries=5):
+def download_with_retry(url, product_folder_path, max_retries=5):
     """Download file using curl with retries"""
-    # Change to the raw folder directory
-    os.chdir(RAW_FOLDER)
+    # Create product folder if it doesn't exist
+    os.makedirs(product_folder_path, exist_ok=True)
+    os.chdir(product_folder_path)
     
     # Set User-Agent based on platform
     user_agent = (
@@ -43,12 +44,13 @@ def download_with_retry(url, max_retries=5):
                 print(f"❌ All download attempts failed for URL: {url}")
                 return False
 
-def download_images(driver, raw_folder_name, expected_count=None):
+def download_images(driver, product_name, expected_count=None):
     """Downloads selected images from MidJourney."""
     print("Selecting and downloading images...")
     try:
-        os.makedirs(RAW_FOLDER, exist_ok=True)
-        os.chdir(RAW_FOLDER)
+        # Create product-specific folder within RAW_FOLDER
+        product_raw_folder = os.path.join(RAW_FOLDER, product_name)
+        os.makedirs(product_raw_folder, exist_ok=True)
         
         # Get all available images
         images = driver.select_all("img")
@@ -78,7 +80,7 @@ def download_images(driver, raw_folder_name, expected_count=None):
                 img_element = driver.wait_for_element('img[style="filter: none;"]')
                 img_url = img_element.get_attribute("src")
                 
-                if download_with_retry(img_url):
+                if download_with_retry(img_url, product_raw_folder):
                     downloaded_count += 1
                     print(f"✅ Downloaded image {downloaded_count}/{total_images}")
                 else:
@@ -95,7 +97,7 @@ def download_images(driver, raw_folder_name, expected_count=None):
             raise Exception("No images were downloaded successfully")
             
         print(f"✅ Successfully downloaded {downloaded_count} images")
-        return RAW_FOLDER
+        return product_raw_folder
 
     except Exception as e:
         logging.error(f"Error in download_images: {e}")

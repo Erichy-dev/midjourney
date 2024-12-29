@@ -41,19 +41,13 @@ def upload_to_google_drive(target_folder, max_retries=3):
             # Determine if it's Seamless Pattern or Digital Paper from the path
             folder_type = "Seamless Pattern" if SEAMLESS_PATTERN_FOLDER in target_folder else "Digital Paper"
             
-            # Create main category folder (if it doesn't exist)
+            # Create main category folder (if it doesn't exist) - No public permissions
             main_folder = create_or_get_folder(drive, f"Digital Paper Store - {folder_type}")
-            # Set public permissions for main folder
-            main_folder.InsertPermission({
-                'type': 'anyone',
-                'role': 'reader',
-                'withLink': True
-            })
             
             # Get the product folder name from the target path
             product_folder_name = os.path.basename(target_folder)
             
-            # Create product subfolder
+            # Create product subfolder and make it public
             product_folder = create_or_get_folder(drive, product_folder_name, parent_id=main_folder['id'])
             # Set public permissions for product folder
             product_folder.InsertPermission({
@@ -65,10 +59,9 @@ def upload_to_google_drive(target_folder, max_retries=3):
             # Get list of local files to upload
             local_files = [f for f in os.listdir(target_folder) if os.path.isfile(os.path.join(target_folder, f))]
             uploaded_count = 0
+            uploaded_files_links = []
             
-            uploaded_files_links = []  # New list to store individual file links
-            
-            # Upload all files in the folder
+            # Upload all files in the folder and make them public
             for filename in local_files:
                 filepath = os.path.join(target_folder, filename)
                 try:
@@ -78,12 +71,12 @@ def upload_to_google_drive(target_folder, max_retries=3):
                     })
                     file_drive.SetContentFile(filepath)
                     file_drive.Upload()
+                    # Make each file public
                     file_drive.InsertPermission({
                         'type': 'anyone',
                         'role': 'reader',
                         'withLink': True
                     })
-                    # Store the direct file link
                     file_link = f"https://drive.google.com/uc?id={file_drive['id']}"
                     uploaded_files_links.append(file_link)
                     uploaded_count += 1
