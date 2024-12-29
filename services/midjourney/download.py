@@ -19,13 +19,18 @@ def download_with_retry(url, max_retries=5):
         else "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     )
     
+    # Generate timestamp filename
+    timestamp = time.strftime("%Y%m%d_%H%M%S")
+    file_extension = os.path.splitext(url)[1] or '.png'  # Default to .png if no extension
+    custom_filename = f"midjourney_{timestamp}{file_extension}"
+    
     for attempt in range(max_retries):
         try:
             command = [
                 'curl',
                 '-H', f'User-Agent: {user_agent}',
                 '-H', 'Referer: https://www.midjourney.com/',
-                '-O',
+                '-o', custom_filename,
                 url
             ]
             subprocess.run(command, check=True)
