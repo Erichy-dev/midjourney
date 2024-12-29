@@ -56,7 +56,6 @@ MAX_IMAGE_WAIT_TIME = 900
 
 # URLs
 ORGANIZE_PAGE_URL = "https://www.midjourney.com/archive"
-EXPLORE_PAGE_URL = "https://www.midjourney.com/explore?tab=top"
 
 for directory in REQUIRED_DIRS:
     os.makedirs(directory, exist_ok=True)

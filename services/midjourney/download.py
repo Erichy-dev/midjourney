@@ -6,8 +6,24 @@ import pathlib
 import subprocess
 from config.settings import BASE_OUTPUT_FOLDER, DOWNLOADS_FOLDER, RAW_FOLDER
 import platform
+from PIL import Image
 
-def download_with_retry(url, product_folder_path, max_retries=5):
+def validate_image(filepath):
+    """Validate if the downloaded file is a valid image"""
+    try:
+        with Image.open(filepath) as img:
+            # Try to load the image data
+            img.verify()
+            # If we can load and verify the image, it's valid
+            return True
+    except Exception as e:
+        print(f"❌ Invalid image file: {e}")
+        # Remove the corrupted file
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        return False
+
+def download_with_retry(url, product_folder_path, driver=None, max_retries=5):
     """Download file using curl with retries"""
     # Create product folder if it doesn't exist
     os.makedirs(product_folder_path, exist_ok=True)
@@ -24,6 +40,7 @@ def download_with_retry(url, product_folder_path, max_retries=5):
     timestamp = time.strftime("%Y%m%d_%H%M%S")
     file_extension = os.path.splitext(url)[1] or '.png'  # Default to .png if no extension
     custom_filename = f"{timestamp}{file_extension}"
+    filepath = os.path.join(product_folder_path, custom_filename)
     
     for attempt in range(max_retries):
         try:
@@ -35,7 +52,35 @@ def download_with_retry(url, product_folder_path, max_retries=5):
                 url
             ]
             subprocess.run(command, check=True)
-            return True
+            
+            # Validate the downloaded image
+            if validate_image(filepath):
+                return True
+            else:
+                print(f"Downloaded file is not a valid image, attempt {attempt + 1}")
+                # Remove the invalid file
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+                    print(f"Removed invalid file: {filepath}")
+                
+                # Try immediate redownload up to 3 times
+                for retry_attempt in range(3):
+                    print(f"Immediate retry attempt {retry_attempt + 1}")
+                    try:
+                        subprocess.run(command, check=True)
+                        if validate_image(filepath):
+                            print(f"✅ Successful download on retry {retry_attempt + 1}")
+                            return True
+                        else:
+                            # Clean up invalid file before next attempt
+                            if os.path.exists(filepath):
+                                os.remove(filepath)
+                    except subprocess.CalledProcessError as e:
+                        print(f"Download failed on retry {retry_attempt + 1}: {e}")
+                        if os.path.exists(filepath):
+                            os.remove(filepath)
+                continue
+                
         except subprocess.CalledProcessError as e:
             if attempt < max_retries - 1:
                 print(f"Download attempt {attempt + 1} failed. Retrying...")
@@ -43,6 +88,8 @@ def download_with_retry(url, product_folder_path, max_retries=5):
             else:
                 print(f"❌ All download attempts failed for URL: {url}")
                 return False
+    
+    return False
 
 def download_images(driver, product_name, expected_count=None):
     """Downloads selected images from MidJourney."""
@@ -80,7 +127,7 @@ def download_images(driver, product_name, expected_count=None):
                 img_element = driver.wait_for_element('img[style="filter: none;"]')
                 img_url = img_element.get_attribute("src")
                 
-                if download_with_retry(img_url, product_raw_folder):
+                if download_with_retry(img_url, product_raw_folder, driver):
                     downloaded_count += 1
                     print(f"✅ Downloaded image {downloaded_count}/{total_images}")
                 else:
