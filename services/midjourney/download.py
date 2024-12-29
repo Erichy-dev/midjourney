@@ -9,6 +9,9 @@ import platform
 
 def download_with_retry(url, max_retries=5):
     """Download file using curl with retries"""
+    # Change to the raw folder directory
+    os.chdir(RAW_FOLDER)
+    
     # Set User-Agent based on platform
     user_agent = (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -19,9 +22,11 @@ def download_with_retry(url, max_retries=5):
     for attempt in range(max_retries):
         try:
             command = [
-                'bash',
-                '-c',
-                f"cd '{RAW_FOLDER}' && curl -H 'User-Agent: {user_agent}' -H 'Referer: https://www.midjourney.com/' -O '{url}'"
+                'curl',
+                '-H', f'User-Agent: {user_agent}',
+                '-H', 'Referer: https://www.midjourney.com/',
+                '-O',
+                url
             ]
             subprocess.run(command, check=True)
             return True
